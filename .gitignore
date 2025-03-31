@@ -1,5 +1,5 @@
 .env
 config.py
 .idea
-towns_images/*
-towns_links/*
+data/towns_images/*
+data/towns_links/*
