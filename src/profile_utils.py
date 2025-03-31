@@ -1,12 +1,14 @@
 import os
-import time
 import requests
-import src.pyanty as pyanty
 from typing import List
 from dotenv import load_dotenv
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+
+from src.utils import get_geckodriver_path
+
 
 load_dotenv()
 ADS_API_URL = os.getenv("ADS_API_URL")
@@ -19,19 +21,11 @@ def retrieve_profile_ids() -> List:
     return profile_ids
 
 
-def open_dolphin_profile(profile_id):
-    response = pyanty.run_profile(profile_id)
-    port = response['automation']['port']
-    driver = pyanty.get_driver(port=port)
-    time.sleep(2)
-
-    return driver
-
-
-def close_dolphin_profile(driver, profile_id):
-    driver.quit()
-    time.sleep(1)
-    pyanty.close_profile(profile_id)
+def open_profile(anty_type, profile_id):
+    if anty_type.upper() == "ADSPOWER":
+        return open_ads_power_profile(profile_id)
+    elif anty_type.upper() == "DOLPHIN":
+        return open_dolphin_profile(profile_id)
 
 
 def open_ads_power_profile(profile_id):
@@ -40,18 +34,52 @@ def open_ads_power_profile(profile_id):
     response = requests.get(start_url).json()
 
     ws_url = response["data"]["ws"]["selenium"]
-    print(f"WebSocket Debugging URL: {ws_url}")
 
     # Connect Selenium to the running Adspower profile
     options = webdriver.ChromeOptions()
     options.debugger_address = ws_url.replace("ws://", "").replace("/devtools/browser/", "")
 
-    service = Service("src/pyanty/chromedriver")  # Ensure you have the correct path
+    geckodriver_path = get_geckodriver_path()
+    print(geckodriver_path)
+    service = Service(geckodriver_path)  # Ensure you have the correct path
     driver = webdriver.Chrome(service=service, options=options)
 
     return driver
 
 
+def open_dolphin_profile(profile_id):
+    start_url = f"http://localhost:3001/v1.0/browser_profiles/{profile_id}/start?automation=1"
+    response = requests.get(start_url).json()
+
+    port = response["automation"]["port"]
+
+    options = Options()
+    options.add_experimental_option('debuggerAddress', f'127.0.0.1:{port}')
+
+    geckodriver_path = get_geckodriver_path()
+    print(geckodriver_path)
+    service = Service(geckodriver_path)  # Ensure you have the correct path
+    driver = webdriver.Chrome(service=service, options=options)
+
+    return driver
+
+
+def close_profile(anty_type, driver, profile_id):
+    if anty_type.upper() == "ADSPOWER":
+        close_ads_power_profile(driver, profile_id)
+    elif anty_type.upper() == "DOLPHIN":
+        close_dolphin_profile(driver, profile_id)
+
+
 def close_ads_power_profile(driver, profile_id):
     driver.quit()
-    requests.get(f"{ADS_API_URL}/api/v1/browser/stop?user_id={profile_id}")
+
+    stop_url = f"{ADS_API_URL}/api/v1/browser/stop?user_id={profile_id}"
+    requests.get(stop_url)
+
+
+def close_dolphin_profile(driver, profile_id):
+    driver.quit()
+
+    stop_url = f"http://localhost:3001/v1.0/browser_profiles/{profile_id}/stop"
+    requests.get(stop_url)
