@@ -3,3 +3,5 @@ config.py
 .idea
 data/towns_images/*
 data/towns_links/*
+profiles.txt
+test.py
