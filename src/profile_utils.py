@@ -57,7 +57,6 @@ def open_dolphin_profile(profile_id):
     options.add_experimental_option('debuggerAddress', f'127.0.0.1:{port}')
 
     geckodriver_path = get_geckodriver_path()
-    print(geckodriver_path)
     service = Service(geckodriver_path)  # Ensure you have the correct path
     driver = webdriver.Chrome(service=service, options=options)
 
