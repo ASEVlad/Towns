@@ -1,0 +1,5 @@
+.env
+config.py
+.idea
+towns_images/*
+towns_links/*
