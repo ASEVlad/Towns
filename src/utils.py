@@ -1,5 +1,8 @@
-import platform
 import os
+import re
+import time
+import random
+import platform
 
 
 def get_geckodriver_path():
@@ -27,7 +30,7 @@ def select_driver_executable(system, architecture):
 
 
 def get_full_xpath_element(driver, element):
-    full_xpath_element= driver.execute_script(
+    full_xpath_element = driver.execute_script(
         """function absoluteXPath(element) {
             var comp, comps = [];
             var parent = null;
@@ -62,3 +65,25 @@ def get_full_xpath_element(driver, element):
         element
     )
     return full_xpath_element
+
+
+def save_town_link(town_link, town_type):
+    towns_folder = os.path.join("data", "towns_links")
+    towns_links_path = None
+
+    if town_type == "free":
+        towns_links_path = os.path.join(towns_folder, "free_towns.txt")
+    elif town_type == "dynamic":
+        towns_links_path = os.path.join(towns_folder, "dynamic_towns.txt")
+    elif town_type == "state":
+        towns_links_path = os.path.join(towns_folder, "state_towns.txt")
+
+    with open(towns_links_path, 'a') as file:
+        file.write("\n" + town_link)
+
+
+def send_keys(element, text):
+    safe_text = re.sub(r'[^\x20-\x7E\u0000-\uFFFF]', '', text)
+    for letter in safe_text:
+        element.send_keys(letter)
+        time.sleep(random.randint(1, 20)/1000)

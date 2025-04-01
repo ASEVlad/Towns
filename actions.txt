@@ -1,0 +1,11 @@
+create_free_channel
+join_free_channel
+join_paid_channel
+get_daily_points
+write_message -where=main_channel -number=10
+
+join_paid_channel -chance=40%
+get_daily_points 
+create_free_channel -chance=40%
+join_free_channel
+write_message -where=main_channel -number=10 -chance=40%

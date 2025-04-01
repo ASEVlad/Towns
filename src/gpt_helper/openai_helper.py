@@ -2,11 +2,10 @@ import os
 import random
 import logging
 import requests
-import numpy as np
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from data.discord_names import *
+from data.lists import *
 
 
 load_dotenv()
@@ -14,31 +13,8 @@ OPENAI_API = os.getenv("OPENAI_API")
 client = OpenAI(api_key=OPENAI_API)
 
 
-def generate_reply(last_messages):
-    """Generates the next message using OpenAI API."""
-    if random.random() < 0.05:
-        change_topic = "Change topic of the conversation."
-    else:
-        change_topic = ""
-
-    num_words = max(5, np.floor(random.random() * 100 / 4))
-
-    content_message = f"""
-    Your task is to generate next message, please. Make them short and ready to send (I do not want to change anything in them.)
-    {change_topic}. Make next message of {num_words} words.
-    
-    Here is the flow of messages in the chat:
-    {last_messages[0]}\n
-    {last_messages[1]}\n
-    {last_messages[2]}\n
-    {last_messages[3]}\n
-    {last_messages[4]}\n
-    
-    Generate next message, please.
-    """
-
+def generate_reply(content_message):
     messages = [{"role": "user", "content": content_message}]
-
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -109,7 +85,6 @@ def generate_town_name():
 
 
 def generate_town_logo(town_name):
-    basic_colors = ["red", "blue", "green", "yellow", "orange", "purple", "black", "white", "brown", "gray"]
     random_colors = random.sample(basic_colors, 2)
 
     response = client.images.generate(
@@ -123,7 +98,7 @@ def generate_town_logo(town_name):
     logo_url = response.data[0].url
 
     # Download and save the image
-    path_to_logos = "towns_images"
+    path_to_logos = os.path.join("data", "towns_images")
     num_of_existed_logos = len(os.listdir(path_to_logos))
 
     logo_path = os.path.join(path_to_logos, f"town_logo_{num_of_existed_logos}.png")
