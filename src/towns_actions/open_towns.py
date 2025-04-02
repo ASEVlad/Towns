@@ -1,4 +1,5 @@
 import time
+from loguru import logger
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,20 +9,38 @@ from src.towns_profile_manager import TownsProfileManager
 
 
 def open_towns(towns_profile: TownsProfileManager):
-    # open link
-    towns_profile.driver.execute_script(f"window.open('https://app.towns.com/explore', '_blank');")
-    towns_profile.driver.implicitly_wait(5)
+    try:
+        # switch to the first tab
+        towns_profile.driver.switch_to.window(towns_profile.driver.window_handles[0])
 
-    # make tab with Towns active
-    for handle in reversed(towns_profile.driver.window_handles):  # Iterate in reverse order
-        towns_profile.driver.switch_to.window(handle)
-        if "Towns" in towns_profile.driver.title:  # Adjust the title check if needed
-            break  # Found the correct tab
+        # open link
+        towns_profile.driver.execute_script(f"window.open('https://app.towns.com/explore', '_blank');")
+        towns_profile.driver.implicitly_wait(5)
 
-    # wait till open
-    element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//a[@href='/t/new'] | //*[contains(text(), 'Log In')]")))
+        success = False
+        # make tab with Towns active
+        for handle in reversed(towns_profile.driver.window_handles):  # Iterate in reverse order
+            towns_profile.driver.switch_to.window(handle)
+            if "Towns" in towns_profile.driver.title:  # Adjust the title check if needed
+                break  # Found the correct tab
+                success = True
 
-    time.sleep(2)
+        if not success:
+            towns_profile.driver.get("https://app.towns.com/explore")
+            towns_profile.driver.implicitly_wait(5)
 
-    # return True if Login is needed
-    return element.text == "Login"
+        if "Towns" in towns_profile.driver.title:
+            # wait till open
+            element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//a[@href='/t/new'] | //*[contains(text(), 'Log In')]")))
+
+            time.sleep(2)
+
+            # return True if Login is needed
+            logger.info(f"Profile_id: {towns_profile.profile_id}. Successfully OPENED main page!")
+            return element.text == "Log In"
+        else:
+            raise "Could not open main page"
+
+    except Exception as e:
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        raise

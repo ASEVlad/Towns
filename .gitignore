@@ -3,5 +3,7 @@ config.py
 .idea
 data/towns_images/*
 data/towns_links/*
-profiles.txt
+profiles.csv
 test.py
+/data/profiles_data.json
+/.ipynb_checkpoints

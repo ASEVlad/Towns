@@ -1,0 +1,15 @@
+okx_withdraw -bottom_limit_range=0.0125 -top_limit_range=0.0175
+
+create_free_channel -chance=70%
+create_dynamic_channel -chance=50%
+create_state_channel -chance=20% -cost=0.1
+
+join_free_channel -chance=70%
+join_dynamic_channel -chance=50% -cost_limit=0.001
+join_state_channel -chance=30% -cost_limit=0.1
+
+get_daily_points -chance=95%
+
+write_message -chance=70% -town_type=state -number=3 -cooldown=10
+write_message -chance=70% -town_type=dynamic -number=3 -cooldown=10
+write_message -chance=70% -town_type=free -number=3 -cooldown=10

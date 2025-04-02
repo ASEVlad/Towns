@@ -11,53 +11,55 @@ from src.utils import get_geckodriver_path
 
 
 class TownsProfileManager:
-    def __init__(self, profile_id: str):
+    def __init__(self, profile_id: str, anty_type: str, login_with: str):
         self.profile_id = profile_id
+        self.anty_type = anty_type.upper()
+        self.login_with = login_with.upper()
 
         self.wallet = None
-        self.other_towns = None
-        self.main_towns = None
-        self.secondary_towns = None
+        self.free_towns = None
+        self.state_towns = None
+        self.dynamic_towns = None
         self.driver = None
-        self.anty_type = None
+        self.linked_accounts = None
 
         # Read profile parameters from file
         self.load_profile_data()
 
         load_dotenv()
-        self.anty_type = os.getenv("ANTY_TYPE").upper()
         if self.anty_type == "ADSPOWER":
             self.ADS_API_URL = os.getenv("ADS_API_URL")
 
     def load_profile_data(self):
         try:
-            with open("profiles_data.json", "r") as file:
+            with open(os.path.join("data", "profiles_data.json"), "r") as file:
                 profiles = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             profiles = {}
 
         profile_data = profiles.get(self.profile_id, {})
-        self.main_towns = profile_data.get("main_towns", [])
-        self.secondary_towns = profile_data.get("secondary_towns", [])
-        self.other_towns = profile_data.get("other_towns", [])
+        self.state_towns = profile_data.get("state_towns", [])
+        self.dynamic_towns = profile_data.get("dynamic_towns", [])
+        self.free_towns = profile_data.get("free_towns", [])
         self.wallet = profile_data.get("wallet", "")
+        self.linked_accounts = profile_data.get("linked_accounts", {})
 
     def save_profile_data(self):
         try:
-            with open("profiles_data.json", "r") as file:
+            with open(os.path.join("data", "profiles_data.json"), "r") as file:
                 profiles = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             profiles = {}
 
         profiles[self.profile_id] = {
-            "anty_type": self.anty_type,
-            "main_towns": self.main_towns,
-            "secondary_towns": self.secondary_towns,
-            "other_towns": self.other_towns,
-            "wallet": self.wallet
+            "state_towns": self.state_towns,
+            "dynamic_towns": self.dynamic_towns,
+            "free_towns": self.free_towns,
+            "wallet": self.wallet,
+            "linked_accounts": self.linked_accounts
         }
 
-        with open("profiles_data.json", "w") as file:
+        with open(os.path.join("data", "profiles_data.json"), "w") as file:
             json.dump(profiles, file, indent=4)
 
     def open_profile(self):
@@ -97,6 +99,7 @@ class TownsProfileManager:
         self.save_profile_data()
 
         if self.driver:
+            self.driver.close()
             self.driver.quit()
 
         if self.anty_type == "ADSPOWER":
