@@ -16,6 +16,7 @@ from src.towns_actions.open_towns import open_towns
 from src.towns_actions.write_message import write_n_messages
 from src.towns_profile_manager import TownsProfileManager
 from src.okx import okx_withdraw
+from src.utils import extract_wallets_to_file
 
 
 def run_profile_group(profile_group: List[TownsProfileManager], actions: List[Dict[str, any]]):
@@ -151,10 +152,12 @@ def run_actions(towns_profile: TownsProfileManager, actions: List[Dict[str, any]
                 else:
                     logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for DAILY POINTS")
 
+        extract_wallets_to_file()
         towns_profile.close_profile()
 
     except Exception as e:
         try:
+            extract_wallets_to_file()
             towns_profile.close_profile()
         except Exception as er:
             logger.error(f"Profile_ID: {towns_profile.profile_id}. {er}")
