@@ -23,10 +23,10 @@ def fetch_ai_response(content_message):
         return response.choices[0].message.content
     except Exception as e:
         logger.error(f"Error generating response from OpenAI: {e}")
-        return None
+        raise
 
 
-def generate_username():
+def generate_username() -> str:
     random_unusual_discord_usernames = random.sample(unusual_discord_usernames, 5)
     content_message = f"""
     Generate discord username.
@@ -43,12 +43,12 @@ def generate_username():
     Generate discord username. Answer: """
 
     try:
-        fetch_ai_response(content_message)
+        return fetch_ai_response(content_message)
     except:
         raise
 
 
-def generate_town_name():
+def generate_town_name() -> str:
     random_unusual_discord_channels = random.sample(unusual_discord_channels, 5)
     content_message = f"""
     Generate discord channel name.
@@ -65,12 +65,12 @@ def generate_town_name():
     Generate discord channel name. Answer: """
 
     try:
-        fetch_ai_response(content_message)
+        return fetch_ai_response(content_message)
     except:
         raise
 
 
-def generate_town_logo(town_name):
+def generate_town_logo(town_name) -> str:
     try:
         random_colors = random.sample(basic_colors, 2)
 
@@ -99,3 +99,4 @@ def generate_town_logo(town_name):
 
     except Exception as e:
         logger.error(f"{e}")
+        raise
