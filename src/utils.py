@@ -99,10 +99,14 @@ def save_town_link(town_link, town_type):
 
 
 def send_keys(element, text):
-    safe_text = re.sub(r'[^\x20-\x7E\u0000-\uFFFF]', '', text)
+    safe_text = clean_text(text)
+
     for letter in safe_text:
         element.send_keys(letter)
         time.sleep(random.randint(1, 20)/1000)
+
+def clean_text(text):
+    return re.sub(r'[^\x20-\x7E\u0000-\uFFFF]', '', text)
 
 
 def parse_actions(file_path: str = 'actions.txt') -> List[Dict[str, any]]:

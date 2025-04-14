@@ -11,3 +11,4 @@ test.py
 all_profiles.csv
 towns_selenium.ipynb
 logfile.log
+data/messages.json
