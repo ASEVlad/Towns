@@ -16,7 +16,7 @@ def main():
         return False
 
     load_dotenv()
-    group_of_n = int(os.getenv('GROUP_OF_N'))
+    group_of_n = int(os.getenv('PARALLEL_ACCOUNTS'))
 
     # create group of profiles to run in concurrent way
     profile_groups = logic.generate_profile_groups(group_of_n)

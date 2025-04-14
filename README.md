@@ -1,11 +1,11 @@
 # Towns Selenium Script
 
 ## Description
-A Selenium-based automation script for farming Towns protocol points. 
+A Selenium-based automation script for farming points / warming up Towns protocol. 
 This script works directly with Dolphin or AdsPower anti-detection browsers.
 
 ## Important Note
-This script must be executed on the local machine where Dolphin or AdsPower is installed and running. 
+This script must be executed on the local machine where Dolphin or AdsPower is installed AND running. 
 It automatically opens browser profiles and interacts with the Towns protocol UI to farm points.
 
 
@@ -13,20 +13,37 @@ It automatically opens browser profiles and interacts with the Towns protocol UI
 
 ### 1. Copy the repository from GitHub
 ```bash
-git clone git@github.com:ASEVlad/Towns.git
+git clone https://github.com/ASEVlad/Towns.git
 cd Towns/
 ```
 
 ### 2. Set up local files
-1. Create `.env` in the Towns folder and fill it using the format in `env.example`
-2. Create `profile.csv` and fill it using the format in `profiles.example.csv`
-3. Create `actions.txt` and fill it with your desired actions (see Available Actions section above)
-4. Add town links to `Towns/data/state_towns.txt` with 1-2 links of Towns you want to use for farming points
-   - You can create a Town on your main account and copy-paste the link into this file
-5. Download the geckodriver:
+1. Create `.env` in the Towns folder and fill it similarly to `env.example`
+   - OPEN_AI_API is required.
+   - everything else is optional. But keep in mind, if:
+     - ADS_API_URL usually standard so you can not specify it. But if you have some errors with it - check it out.
+     - if you want to run few accounts in parallel - adjust PARALLEL_ACCOUNTS (if equals to 1 - then not parallel)
+     - you want to use OKX withdrawal - adjust OKX_API_KEY, OKX_API_SECRET, OKX_API_PASSWORD
+     - you want to use BINANCE withdrawal - adjust BINANCE_API_KEY, BINANCE_API_SECRET
+
+2. Create `profile.csv` and fill it similarly to `profiles.example.csv`
+   - Basically it is a table with 3 columns
+     - profile_id
+     - anty_type : is type of your anty browser. Current options: "dolphin" or "adspower"
+     - login_with : is the the name os the social media with what you want to be authorized. Current options: "twitter" or "google"
+
+3. Create `actions.txt` and fill it with your desired actions (see Available Actions section further)
+
+4. Add town links to `Towns/data/state_towns.txt` with 1 or more links of Towns you want to use for farming points
+   - For the cheapest option of farming points manually create Town in your main account with state price. 90% of the price will be brought back to your account.
+   - Just provide links for those towns similarly to data/free_towns.txt or data/dynamic_towns.txt
+
+5. Adjust geckodriver:
    - Direct link: https://anty-browser.s3.eu-central-1.amazonaws.com/chromedriver-134.zip
    - Or manually download from https://help.dolphin-anty.com/en/articles/7127390-basic-automation-dolphin-anty using the "Download ChromeDriver" button
-6. Unzip the downloaded files and place the geckodriver file (or geckodriver.exe for Windows) into the Town folder
+   - After downloading unzip the files and put the chromedriver for your system to the data folder in main folder of the script (TOWNS) 
+   - This step could cause the error. So be sure that you have downloaded the same version of the browser as you are using in kernel in you profiles in anty browser. The latest version is 134
+
 
 ### 3. Open your anti-detection browser
 - This can be either Dolphin or AdsPower
@@ -70,8 +87,8 @@ join_dynamic_channel -chance=50% -cost_limit=0.001
 join_state_channel -chance=30% -cost_limit=0.1
 get_daily_points -chance=95%
 write_message -chance=70% -town_type=state -number=3 -cooldown=10
-write_message -chance=70% -town_type=dynamic -number=3 -cooldown=10
-write_message -chance=70% -town_type=free -number=3 -cooldown=10
+write_message -chance=70% -town_type=dynamic -number=2 -cooldown=10
+write_message -chance=70% -town_type=free -number=1 -cooldown=10
 ```
 
 
@@ -87,8 +104,8 @@ join_dynamic_channel -chance=50% -cost_limit=0.001
 join_state_channel -chance=30% -cost_limit=0.1
 get_daily_points -chance=95%
 write_message -chance=70% -town_type=state -number=3 -cooldown=10
-write_message -chance=70% -town_type=dynamic -number=3 -cooldown=10
-write_message -chance=70% -town_type=free -number=3 -cooldown=10
+write_message -chance=70% -town_type=dynamic -number=2 -cooldown=10
+write_message -chance=70% -town_type=free -number=1 -cooldown=10
 ```
 
 ### If you use OKX to withdraw your funds:
@@ -98,7 +115,7 @@ create_free_channel -chance=70%
 create_dynamic_channel -chance=50%
 create_state_channel -chance=20% -cost=0.1
 join_free_channel -chance=70%
-write_message -chance=100% -town_type=free -number=3 -cooldown=10
+write_message -chance=100% -town_type=free -number=2 -cooldown=10
 ```
 
 #### Set Up OKX API
@@ -125,12 +142,11 @@ join_dynamic_channel -chance=50% -cost_limit=0.001
 join_state_channel -chance=30% -cost_limit=0.1
 get_daily_points -chance=95%
 write_message -chance=70% -town_type=state -number=3 -cooldown=10
-write_message -chance=70% -town_type=dynamic -number=3 -cooldown=10
-write_message -chance=70% -town_type=free -number=3 -cooldown=10
+write_message -chance=70% -town_type=dynamic -number=2 -cooldown=10
+write_message -chance=70% -town_type=free -number=1 -cooldown=10
 ```
 
-I recommend depositing the cost of the Town you want to interact with into the respective wallets. 
-The link to the Town should be specified in `state_town.txt`, along with an additional deposit of 5-10 USD in ETH equivalent (approximately 0.0025-0.005 ETH at present).
+I recommend depositing the cost of the Town you want to abuse for fast farming along with an additional deposit of 5-10 USD in ETH equivalent (approximately 0.0025-0.005 ETH at present).
 
 ### **Disclaimer:** 
 All actions will be randomly executed during profile runtime, except:

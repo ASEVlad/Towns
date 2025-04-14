@@ -64,11 +64,11 @@ def check_env_file(env_file_path: str = '.env') -> bool:
         logger.info(f"ADS_API_URL not provided, set to default: {default_url}")
 
     # Check and set GROUP_OF_N if not provided
-    group_of_n = os.getenv('GROUP_OF_N')
+    group_of_n = os.getenv('PARALLEL_ACCOUNTS')
     if group_of_n is None or group_of_n.strip() == '':
-        default_n = '2'
-        os.environ['GROUP_OF_N'] = default_n
-        logger.info(f"GROUP_OF_N not provided, set to default: {default_n}")
+        default_n = '1'
+        os.environ['PARALLEL_ACCOUNTS'] = default_n
+        logger.info(f"PARALLEL_ACCOUNTS not provided, set to default: {default_n}")
 
     logger.info(".env file checks completed successfully.")
     return True
