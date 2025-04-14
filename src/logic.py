@@ -2,7 +2,7 @@ import time
 import random
 import threading
 import pandas as pd
-from numpy import floor, ceil
+from numpy import floor
 from typing import List, Dict
 from loguru import logger
 
@@ -332,7 +332,7 @@ def generate_profile_groups(group_of_n=5):
     remaining = len(df)
 
     while remaining > 0:
-        group_size = random.randint(group_of_n - int(floor(group_of_n * 0.25)), group_of_n + int(ceil(group_of_n * 0.25)))
+        group_size = random.randint(group_of_n - int(floor(group_of_n * 0.25)), group_of_n + int(floor(group_of_n * 0.25)))
         group_size = min(group_size, remaining)  # Ensure it doesn't exceed available rows
         group_sizes.append(group_size)
         remaining -= group_size
