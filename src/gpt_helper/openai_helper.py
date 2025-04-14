@@ -13,7 +13,7 @@ OPENAI_API = os.getenv("OPENAI_API")
 client = OpenAI(api_key=OPENAI_API)
 
 
-def generate_reply(content_message):
+def fetch_ai_response(content_message):
     messages = [{"role": "user", "content": content_message}]
     try:
         response = client.chat.completions.create(
@@ -42,17 +42,10 @@ def generate_username():
     Now generate new one similar to the names in the examples.
     Generate discord username. Answer: """
 
-    messages = [{"role": "user", "content": content_message}]
-
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        logger.error(f"Error generating response from OpenAI: {e}")
-        return None
+        fetch_ai_response(content_message)
+    except:
+        raise
 
 
 def generate_town_name():
@@ -71,17 +64,10 @@ def generate_town_name():
     Now generate new one similar to the names in the examples.
     Generate discord channel name. Answer: """
 
-    messages = [{"role": "user", "content": content_message}]
-
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        logger.error(f"Error generating response from OpenAI: {e}")
-        return None
+        fetch_ai_response(content_message)
+    except:
+        raise
 
 
 def generate_town_logo(town_name):
