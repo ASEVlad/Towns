@@ -26,50 +26,6 @@ def fetch_ai_response(content_message):
         raise
 
 
-def generate_username() -> str:
-    random_unusual_discord_usernames = random.sample(unusual_discord_usernames, 5)
-    content_message = f"""
-    Generate discord username.
-    Provide only the generated name.
-    
-    Here are the examples:
-    Generate discord username. Answer: {random_unusual_discord_usernames[0]}
-    Generate discord username. Answer: {random_unusual_discord_usernames[1]}
-    Generate discord username. Answer: {random_unusual_discord_usernames[2]}
-    Generate discord username. Answer: {random_unusual_discord_usernames[3]}
-    Generate discord username. Answer: {random_unusual_discord_usernames[4]}
-
-    Now generate new one similar to the names in the examples.
-    Generate discord username. Answer: """
-
-    try:
-        return fetch_ai_response(content_message)
-    except:
-        raise
-
-
-def generate_town_name() -> str:
-    random_unusual_discord_channels = random.sample(unusual_discord_channels, 5)
-    content_message = f"""
-    Generate discord channel name.
-    Provide only the generated name.
-    
-    Here are the examples:
-    Generate discord channel name. Answer: {random_unusual_discord_channels[0]}
-    Generate discord channel name. Answer: {random_unusual_discord_channels[1]}
-    Generate discord channel name. Answer: {random_unusual_discord_channels[2]}
-    Generate discord channel name. Answer: {random_unusual_discord_channels[3]}
-    Generate discord channel name. Answer: {random_unusual_discord_channels[4]}
-
-    Now generate new one similar to the names in the examples.
-    Generate discord channel name. Answer: """
-
-    try:
-        return fetch_ai_response(content_message)
-    except:
-        raise
-
-
 def generate_town_logo(town_name) -> str:
     try:
         random_colors = random.sample(basic_colors, 2)

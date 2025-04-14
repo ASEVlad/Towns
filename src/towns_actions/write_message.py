@@ -27,10 +27,10 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
     try:
         logger.info(f"Profile_id: {towns_profile.profile_id}. WRITE MESSAGES action just have started!")
 
-        time.sleep(random.uniform(0, time_delay))
-
         # open town
         towns_profile.driver.get(town_link)
+
+        time.sleep(random.uniform(0, time_delay))
 
         # check if profile is a member of the town
         check_element = WebDriverWait(towns_profile.driver, 40).until(EC.visibility_of_element_located(
@@ -64,6 +64,9 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
             new_message_element = new_message_element.find_element(By.XPATH, "..").find_element(By.XPATH, "//div[@role='textbox']")
             send_keys(new_message_element, next_message_cleaned)
             time.sleep(1)
+
+            # Enter username if needed
+            enter_username(towns_profile)
 
             # find and click send button
             send_message_element = towns_profile.driver.find_element(By.XPATH, "//button[@type='button' and @data-testid='submit']")

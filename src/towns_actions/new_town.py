@@ -7,9 +7,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from data.lists import *
 from src.towns_profile_manager import TownsProfileManager
 from src.utils import send_keys, save_town_link, trim_stacktrace_error
-from src.gpt_helper.openai_helper import generate_town_name, generate_town_logo, generate_username
+from src.gpt_helper.openai_helper import generate_town_logo
 
 
 def create_new_town(towns_profile: TownsProfileManager, town_type, cost=0):
@@ -242,3 +243,22 @@ def enter_username(towns_profile):
                                                                     "//button[@data-testid='submit-username-button']")
         submit_username_element.click()
         time.sleep(2)
+
+
+def generate_username() -> str:
+    new_username = (
+            random.choice(list(unusual_discord_usernames_1)) +
+            random.choice(list(unusual_discord_usernames_2))
+    )
+
+    return new_username
+
+
+def generate_town_name() -> str:
+    new_name = (
+            random.choice(list(unusual_discord_names_1)) +
+            random.choice(list(unusual_discord_names_2)) +
+            random.choice(list(unusual_discord_names_3))
+    )
+
+    return new_name
