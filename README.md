@@ -20,6 +20,11 @@ cd Towns/
 ### 2. Set up local files
 1. Create `.env` in the Towns folder and fill it similarly to `env.example`
    - OPEN_AI_API is required.
+     - Go to https://platform.openai.com/settings/organization/api-keys
+     - Click "Create new secret key" and copy the key
+     - Go to https://platform.openai.com/account/billing
+     - Under "Payment methods", add a credit/debit card. 
+     - Click "Add to balance" to top up your account
    - everything else is optional. But keep in mind, if:
      - ADS_API_URL usually standard so you can not specify it. But if you have some errors with it - check it out.
      - if you want to run few accounts in parallel - adjust PARALLEL_ACCOUNTS (if equals to 1 - then not parallel)
