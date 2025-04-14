@@ -5,10 +5,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_profile_manager import TownsProfileManager
+from src.utils import trim_stacktrace_error
 
 
 def login_twitter(towns_profile: TownsProfileManager):
     try:
+        logger.info(f"Profile_id: {towns_profile.profile_id}. LOGIN WITH TWITTER action just have started!")
+
         # find element with Login text
         login_button_element = WebDriverWait(towns_profile.driver, 20).until(
             EC.visibility_of_element_located((By.XPATH, "//button[contains(text(), 'Log In')]")))
@@ -50,6 +53,8 @@ def login_twitter(towns_profile: TownsProfileManager):
 
 def login_google(towns_profile: TownsProfileManager):
     try:
+        logger.info(f"Profile_id: {towns_profile.profile_id}. LOGIN WITH GOOGLE action just have started!")
+
         # find element with Login text
         login_button_element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//button[contains(text(), 'Log In')]")))
         # click Login button
@@ -104,6 +109,8 @@ def check_reauthentication(towns_profile: TownsProfileManager):
 
 def reauthenticate(towns_profile: TownsProfileManager):
     try:
+        logger.info(f"Profile_id: {towns_profile.profile_id}. REAUTHENTICATION action just have started!")
+
         # find and click user-profile-button
         user_profile_button_element = WebDriverWait(towns_profile.driver, 20).until(
             EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='user-profile-button']")))
@@ -147,7 +154,8 @@ def reauthenticate(towns_profile: TownsProfileManager):
             return True
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
 
 
 def find_login_method_element(login_elements, method):

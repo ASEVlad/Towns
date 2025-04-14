@@ -109,7 +109,9 @@ def check_actions_file(file_path: str = "actions.txt") -> bool:
             "join_dynamic_channel",
             "join_state_channel",
             "write_message",
-            "get_daily_points"
+            "get_daily_points",
+            "okx_withdraw",
+            "binance_withdraw"
         }
 
         # Valid parameters for each action (based on README)
@@ -119,9 +121,11 @@ def check_actions_file(file_path: str = "actions.txt") -> bool:
             "create_state_channel": {"chance", "cost"},
             "join_free_channel": {"chance"},
             "join_dynamic_channel": {"chance", "cost_limit"},
-            "join_state_channel": {"chance", "cost_limit"},
+            "join_state_channel": {"chance", "cost_limit", "link"},
             "write_message": {"chance", "town_type", "number", "cooldown", "link"},
-            "get_daily_points": {"chance"}
+            "get_daily_points": {"chance"},
+            "okx_withdraw": {"bottom_limit_range", "top_limit_range", "network"},
+            "binance_withdraw": {"bottom_limit_range", "top_limit_range", "network"}
         }
 
         # Check each action
@@ -176,6 +180,25 @@ def check_actions_file(file_path: str = "actions.txt") -> bool:
                 town_type = params["town_type"]
                 if town_type not in {"free", "dynamic", "state"}:
                     logger.error(f"Invalid town_type value {town_type} for action {action_name} - must be 'free', 'dynamic', or 'state'")
+                    return False
+
+            if "bottom_limit_range" in params:
+                bottom_limit_range = params["bottom_limit_range"]
+                if not isinstance(bottom_limit_range, (int, float)) or bottom_limit_range < 0:
+                    logger.error(f"Invalid bottom_limit_range value {bottom_limit_range} for action {action_name} - must be non-negative")
+                    return False
+
+            if "top_limit_range" in params:
+                top_limit_range = params["top_limit_range"]
+                if not isinstance(top_limit_range, (int, float)) or top_limit_range < 0:
+                    logger.error(
+                        f"Invalid top_limit_range value {top_limit_range} for action {action_name} - must be non-negative")
+                    return False
+
+            if "network" in params:
+                network = params["network"]
+                if network.lower() not in {"arbitrum", "base"}:
+                    logger.error(f"Invalid network value {network} for action {action_name} - must be 'arbitrum" or "base'")
                     return False
 
         logger.info(f"Actions file {file_path} validated successfully")

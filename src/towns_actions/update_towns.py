@@ -6,10 +6,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_profile_manager import TownsProfileManager
+from src.utils import trim_stacktrace_error
 
 
 def update_towns(towns_profile: TownsProfileManager):
     try:
+        logger.info(f"Profile_id: {towns_profile.profile_id}. UPDATE TOWNs action just have started!")
+
         # try to find element with text 'Update Towns'
         update_towns_p_elements = towns_profile.driver.find_elements(By.XPATH, "//*[contains(text(), 'Update Towns')]")
 
@@ -35,4 +38,5 @@ def update_towns(towns_profile: TownsProfileManager):
             logger.info("No element 'Update Towns'")
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")

@@ -6,28 +6,19 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_profile_manager import TownsProfileManager
+from src.utils import trim_stacktrace_error
 
 
 def open_towns(towns_profile: TownsProfileManager):
     try:
-        # switch to the first tab
-        towns_profile.driver.switch_to.window(towns_profile.driver.window_handles[0])
+        logger.info(f"Profile_id: {towns_profile.profile_id}. OPEN TOWNs action just have started!")
 
-        # open link
-        towns_profile.driver.execute_script(f"window.open('https://app.towns.com/explore', '_blank');")
+        # Open a new tab/window using Selenium’s built-in method
+        towns_profile.driver.switch_to.new_window('tab')
+
+        # open main page
+        towns_profile.driver.get("https://app.towns.com/explore")
         towns_profile.driver.implicitly_wait(5)
-
-        success = False
-        # make tab with Towns active
-        for handle in reversed(towns_profile.driver.window_handles):  # Iterate in reverse order
-            towns_profile.driver.switch_to.window(handle)
-            if "Towns" in towns_profile.driver.title:  # Adjust the title check if needed
-                break  # Found the correct tab
-                success = True
-
-        if not success:
-            towns_profile.driver.get("https://app.towns.com/explore")
-            towns_profile.driver.implicitly_wait(5)
 
         if "Towns" in towns_profile.driver.title:
             # wait till open
@@ -42,5 +33,6 @@ def open_towns(towns_profile: TownsProfileManager):
             raise "Could not open main page"
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
         raise

@@ -1,5 +1,13 @@
 create_free_channel -chance=70%
 create_dynamic_channel -chance=50%
 create_state_channel -chance=20% -cost=0.1
+
 join_free_channel -chance=70%
-write_message -chance=100% -town_type=free -number=3 -cooldown=10
+join_dynamic_channel -chance=50% -cost_limit=0.001
+join_state_channel -chance=100% -cost_limit=0.02
+
+get_daily_points -chance=100%
+
+write_message -chance=70% -town_type=state -number=1 -cooldown=10
+write_message -chance=70% -town_type=dynamic -number=1 -cooldown=10
+write_message -chance=70% -town_type=free -number=1 -cooldown=10

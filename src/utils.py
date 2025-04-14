@@ -13,9 +13,11 @@ DEFAULT_PARAMS = {
     'create_state_channel': {'chance': 1.0, 'cost': 0.1},
     'join_free_channel': {'chance': 1.0},
     'join_dynamic_channel': {'chance': 1.0, "cost_limit": 0.001},
-    'join_state_channel': {'chance': 1.0, "cost_limit": 0.1},
+    'join_state_channel': {'chance': 1.0, "cost_limit": 0.1, "link": None},
     'write_message': {'chance': 1.0, 'town_type': 'state', 'number': 3, 'cooldown': 20, "link": None},
     'get_daily_points': {'chance': 1.0},
+    'okx_withdraw': {'network': "base"},
+    'binance_withdraw': {'chance': "base"},
 }
 
 
@@ -131,7 +133,7 @@ def parse_actions(file_path: str = 'actions.txt') -> List[Dict[str, any]]:
                         params[key] = float(value.rstrip('%')) / 100  # Convert percentage to decimal
                     elif key in ["number"]:
                         params[key] = int(value)
-                    elif key in ["town_type", "link"]:
+                    elif key in ["town_type", "link", "network"]:
                         params[key] = value
                     else:
                         params[key] = float(value)
@@ -165,3 +167,23 @@ def extract_wallets_to_file():
         for wallet in wallets:
             file.write(f"{wallet}\n")
 
+
+def trim_stacktrace_error(log: str) -> str:
+    """
+    Keeps only the first two stacktrace lines that start with '#'.
+    """
+    lines = log.strip().splitlines()
+    trimmed_lines = []
+    count = 0
+
+    for line in lines:
+        if line.strip().startswith("#"):
+            if count < 2:
+                trimmed_lines.append(line)
+                count += 1
+            else:
+                break
+        else:
+            trimmed_lines.append(line)
+
+    return "\n".join(trimmed_lines)

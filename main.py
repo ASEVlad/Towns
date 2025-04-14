@@ -7,6 +7,8 @@ from src.checks import check_csv_file, check_env_file, check_actions_file
 
 
 def main():
+    logger.add("logfile.log", rotation="10 MB", level="INFO")
+
     if check_csv_file() and check_env_file() and check_actions_file():
         logger.info("All files are set correctly")
     else:

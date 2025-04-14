@@ -7,7 +7,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from src.utils import send_keys
+from src.towns_actions.new_town import enter_username
+from src.utils import send_keys, trim_stacktrace_error
 from data.lists import basic_colors
 from src.gpt_helper.openai_helper import generate_reply
 from src.towns_profile_manager import TownsProfileManager
@@ -15,6 +16,8 @@ from src.towns_profile_manager import TownsProfileManager
 
 def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1, time_delay=15):
     try:
+        logger.info(f"Profile_id: {towns_profile.profile_id}. WRITE MESSAGES action just have started!")
+
         sent_messages = []
 
         # open town
@@ -28,6 +31,9 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
         if "Share Town Link" not in check_element.text:
             logger.info(f"You are not a member of this town. Link: {town_link}")
             return False
+
+        # Enter username if needed
+        enter_username(towns_profile)
 
         # wait till Send_message element is loaded
         new_message_element = WebDriverWait(towns_profile.driver, 20).until(
@@ -56,11 +62,12 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
             sent_messages.append(next_message)
 
             # wait some time
-            time.sleep(random.randint(time_delay - int(floor(time_delay / 5)), time_delay - int(ceil(time_delay / 5))))
+            time.sleep(random.randint(int(floor(time_delay - time_delay / 5)), int(ceil(time_delay - time_delay / 5))))
             logger.info(f"Profile_id: {towns_profile.profile_id}. Successfully WRITTEN MESSAGE!")
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
 
 
 def get_last_n_messages(message_elements, n_messages=5):

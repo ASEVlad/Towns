@@ -7,11 +7,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_profile_manager import TownsProfileManager
-from src.utils import get_full_xpath_element
+from src.utils import get_full_xpath_element, trim_stacktrace_error
 
 
 def open_random_town(towns_profile: TownsProfileManager):
     try:
+        logger.info(f"Profile_id: {towns_profile.profile_id}. OPEN RANDOM TOWN action just have started!")
+
         # open main page
         towns_profile.driver.get("https://app.towns.com/explore")
 
@@ -42,5 +44,6 @@ def open_random_town(towns_profile: TownsProfileManager):
             return None
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
         return None

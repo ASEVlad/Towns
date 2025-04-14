@@ -2,8 +2,12 @@
 config.py
 .idea
 data/towns_images/*
-data/towns_links/*
+data/chromedriver
+data/towns_wallets.txt
 profiles.csv
 test.py
 /data/profiles_data.json
 /.ipynb_checkpoints
+all_profiles.csv
+towns_selenium.ipynb
+logfile.log

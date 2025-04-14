@@ -6,17 +6,16 @@ from numpy import floor, ceil
 from typing import List, Dict
 from loguru import logger
 
-from src.towns_actions.create_new_town import create_new_town
+from src.withdraw import binance_withdraw, okx_withdraw, wait_for_balance
+from src.towns_actions.new_town import create_new_town, join_free_town, join_paid_town
 from src.towns_actions.get_daily_points import get_daily_points
 from src.towns_actions.get_info import get_connected_wallet
-from src.towns_actions.join_town import join_free_town, join_paid_town
 from src.towns_actions.logining import login_twitter, login_google, check_reauthentication, reauthenticate
 from src.towns_actions.open_random import open_random_town
 from src.towns_actions.open_towns import open_towns
 from src.towns_actions.write_message import write_n_messages
 from src.towns_profile_manager import TownsProfileManager
-from src.okx import okx_withdraw
-from src.utils import extract_wallets_to_file
+from src.utils import extract_wallets_to_file, trim_stacktrace_error
 
 
 def run_profile_group(profile_group: List[TownsProfileManager], actions: List[Dict[str, any]]):
@@ -38,249 +37,181 @@ def run_profile_group(profile_group: List[TownsProfileManager], actions: List[Di
 
 def run_actions(towns_profile: TownsProfileManager, actions: List[Dict[str, any]]):
     try:
-        # Shuffle actions for this profile
         shuffled_actions = arrange_shuffled_actions(actions)
+        execute_initial_actions(towns_profile)
 
-        # 1st action
-        towns_profile.open_profile()
-        time.sleep(5)
+        for action in shuffled_actions:
+            handle_action(towns_profile, action)
 
-        # 2nd action
-        login_need = open_towns(towns_profile)
+        finalize_profile(towns_profile)
+    except Exception as e:
+        handle_error(towns_profile, e)
 
-        # login if needed
-        if login_need:
-            if towns_profile.login_with == "TWITTER":
-                login_twitter(towns_profile)
-            elif towns_profile.login_with == "GOOGLE":
-                login_google(towns_profile)
 
-        else:
-            if check_reauthentication(towns_profile):
-                if reauthenticate(towns_profile):
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. Reauthenticate was done successfully.")
-                else:
-                    raise "Unsuccessful Reauthentication"
+def execute_initial_actions(towns_profile):
+    towns_profile.open_profile()
+    time.sleep(5)
 
-        # 3d action
+    if open_towns(towns_profile):
+        authenticate_user(towns_profile)
+
+    if not towns_profile.wallet:
         get_connected_wallet(towns_profile)
 
-        # all other actions
-        for action in shuffled_actions:
-            if action["action"] == "okx_withdraw":
-                withdraw_range = [action["params"]["bottom_limit_range"], action["params"]["top_limit_range"]]
-                okx_withdraw(towns_profile.wallet, "ETH", "Base", withdraw_range)
 
-            # create channel actions
-            if action["action"] == "create_free_channel":
-                if random.random() < action["params"]["chance"]:
-                    create_new_town(towns_profile, "free")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE FREE CHANNEL")
+def authenticate_user(towns_profile):
+    # login if needed
+    if towns_profile.login_with == "TWITTER":
+        login_twitter(towns_profile)
+    elif towns_profile.login_with == "GOOGLE":
+        login_google(towns_profile)
 
-            if action["action"] == "create_dynamic_channel":
-                if random.random() < action["params"]["chance"]:
-                    create_new_town(towns_profile, "dynamic")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE DYNAMIC CHANNEL")
-
-            if action["action"] == "create_state_channel":
-                if random.random() < action["params"]["chance"]:
-                    create_new_town(towns_profile, "state", action["params"]["cost"])
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE DYNAMIC CHANNEL")
-
-            # join town actions
-            if action["action"] == "join_free_channel":
-                if random.random() < action["params"]["chance"]:
-                    town_link = get_new_random_town_link(towns_profile, "free")
-                    if town_link:
-                        join_free_town(towns_profile, town_link)
-                    else:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN FREE CHANNEL wasn't done due to no link options")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN FREE CHANNEL")
-
-            if action["action"] == "join_dynamic_channel":
-                if random.random() < action["params"]["chance"]:
-                    town_link = get_new_random_town_link(towns_profile, "dynamic")
-                    if town_link:
-                        join_paid_town(towns_profile, town_link, "dynamic", upper_limit=action["params"]["cost_limit"])
-                    else:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN DYNAMIC CHANNEL wasn't done due to no link options")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN DYNAMIC CHANNEL")
-
-            if action["action"] == "join_state_channel":
-                if random.random() < action["params"]["chance"]:
-                    if action["params"]["link"]:
-                        town_link = action["params"]["link"]
-                    else:
-                        town_link = get_new_random_town_link(towns_profile, "state")
-
-                    if town_link:
-                        join_paid_town(towns_profile, town_link, "state", upper_limit=action["params"]["cost_limit"])
-                    else:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN STATE CHANNEL wasn't done due to no link options")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN STATE CHANNEL")
-
-            # write message action
-            if action["action"] == "write_message":
-                if random.random() < action["params"]["chance"]:
-
-                    if action["params"]["link"]:
-                        town_link = action["params"]["link"]
-                    else:
-                        town_link = get_random_town_link(towns_profile, action["params"]["town_type"])
-
-                    if not town_link:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. NO link with provided parameters. Trying open RANDOM TOWN with membership.")
-                    if not town_link:
-                        town_link = open_random_town(towns_profile)
-                    if town_link:
-                        write_n_messages(towns_profile, town_link, action["params"]["number"], action["params"]["cooldown"])
-                    else:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. WRITE MESSAGE wasn't done due to no link options")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for WRITE MESSAGE")
-
-            # get daily points action
-            if action["action"] == "get_daily_points":
-                if random.random() < action["params"]["chance"]:
-                    get_daily_points(towns_profile)
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for DAILY POINTS")
-
-        extract_wallets_to_file()
-        towns_profile.close_profile()
-
-    except Exception as e:
-        try:
-            extract_wallets_to_file()
-            towns_profile.close_profile()
-        except Exception as er:
-            logger.error(f"Profile_ID: {towns_profile.profile_id}. {er}")
-
-        logger.error(f"Profile_ID: {towns_profile.profile_id}. {e}")
-
-
-def run_actions_grouped(towns_profile: TownsProfileManager, actions: List[Dict[str, any]], barrier: threading.Barrier):
-    try:
-        # Shuffle actions for this profile
-        shuffled_actions = arrange_shuffled_actions(actions)
-
-        # 1st action
-        towns_profile.open_profile()
-
-        # 2nd action
-        login_need = open_towns(towns_profile)
-
-        # login if needed
-        if login_need:
-            if towns_profile.login_with == "TWITTER":
-                login_twitter(towns_profile)
-            elif towns_profile.login_with == "GOOGLE":
-                login_google(towns_profile)
-
-            get_connected_wallet(towns_profile)
+    if check_reauthentication(towns_profile):
+        if reauthenticate(towns_profile):
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. Reauthenticate was done successfully.")
         else:
-            if check_reauthentication(towns_profile):
-                if reauthenticate(towns_profile):
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. Reauthenticate was done successfully.")
-                else:
-                    raise "Unsuccessful Reauthentication"
+            raise "Unsuccessful Reauthentication"
 
-        # all other actions
-        for action in shuffled_actions:
-            # create channel actions
-            if action["action"] == "create_free_channel":
-                if random.random() < action["params"]["chance"]:
-                    create_new_town(towns_profile, "free")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE FREE CHANNEL")
 
-            if action["action"] == "create_dynamic_channel":
-                if random.random() < action["params"]["chance"]:
-                    create_new_town(towns_profile, "dynamic")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE DYNAMIC CHANNEL")
+def handle_action(towns_profile, action):
+    if action["action"] in ["okx_withdraw", "binance_withdraw"]:
+        process_withdrawal(towns_profile, action)
+    elif action["action"].startswith("create_"):
+        process_create_channel(towns_profile, action)
+    elif action["action"].startswith("join_"):
+        process_join_channel(towns_profile, action)
+    elif action["action"] == "write_message":
+        process_write_message(towns_profile, action)
+    elif action["action"] == "get_daily_points":
+        process_daily_points(towns_profile, action)
 
-            if action["action"] == "create_state_channel":
-                if random.random() < action["params"]["chance"]:
-                    create_new_town(towns_profile, "state", action["params"]["cost"])
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE DYNAMIC CHANNEL")
 
-            # join town actions
-            if action["action"] == "join_free_channel":
-                if random.random() < action["params"]["chance"]:
-                    town_link = get_new_random_town_link(towns_profile, "free")
-                    if town_link:
-                        join_free_town(towns_profile, town_link)
-                    else:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN FREE CHANNEL wasn't done due to no link options")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN FREE CHANNEL")
+# Extract repetitive action handling logic
+def process_withdrawal(towns_profile, action):
+    if action["action"] == "okx_withdraw":
+        if towns_profile.wallet:
+            withdraw_range = [action["params"]["bottom_limit_range"], action["params"]["top_limit_range"]]
+            withdraw_amount = okx_withdraw(towns_profile.wallet, withdraw_range, "ETH", action["params"]["network"])
 
-            if action["action"] == "join_dynamic_channel":
-                if random.random() < action["params"]["chance"]:
-                    town_link = get_new_random_town_link(towns_profile, "dynamic")
-                    if town_link:
-                        join_paid_town(towns_profile, town_link, "dynamic", upper_limit=action["params"]["cost_limit"])
-                    else:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN DYNAMIC CHANNEL wasn't done due to no link options")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN DYNAMIC CHANNEL")
+    if action["action"] == "binance_withdraw":
+        if towns_profile.wallet:
+            withdraw_range = [action["params"]["bottom_limit_range"], action["params"]["top_limit_range"]]
+            withdraw_amount = binance_withdraw(towns_profile.wallet, withdraw_range, "ETH", action["params"]["network"])
 
-            if action["action"] == "join_state_channel":
-                if random.random() < action["params"]["chance"]:
-                    if action["params"]["link"]:
-                        town_link = action["params"]["link"]
-                    else:
-                        town_link = get_new_random_town_link(towns_profile, "state")
+    if withdraw_amount:
+        wait_for_balance(towns_profile.wallet, withdraw_amount, action["params"]["network"], max_time_to_wait=30)
 
-                    if town_link:
-                        join_paid_town(towns_profile, town_link, "state", upper_limit=action["params"]["cost_limit"])
-                    else:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN STATE CHANNEL wasn't done due to no link options")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN STATE CHANNEL")
 
-            # write message action
-            if action["action"] == "write_message":
-                if random.random() < action["params"]["chance"]:
-                    # Wait at the barrier until all profiles reach their write_message
-                    barrier.wait()
+def process_create_channel(towns_profile, action):
+    # create channel actions
+    if action["action"] == "create_free_channel":
+        if random.random() < action["params"]["chance"]:
+            create_new_town(towns_profile, "free")
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE FREE CHANNEL")
 
-                    if action["params"]["link"]:
-                        town_link = action["params"]["link"]
-                    else:
-                        town_link = get_random_town_link(towns_profile, action["params"]["town_type"])
+    if action["action"] == "create_dynamic_channel":
+        if random.random() < action["params"]["chance"]:
+            create_new_town(towns_profile, "dynamic")
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE DYNAMIC CHANNEL")
 
-                    if not town_link:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. NO link with provided parameters. Trying open RANDOM TOWN with membership.")
-                    if not town_link:
-                        town_link = open_random_town(towns_profile)
-                    if town_link:
-                        write_n_messages(towns_profile, town_link, action["params"]["number"], action["params"]["cooldown"])
-                    else:
-                        logger.warning(f"Profile_ID: {towns_profile.profile_id}. WRITE MESSAGE wasn't done due to no link options")
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for WRITE MESSAGE")
+    if action["action"] == "create_state_channel":
+        if random.random() < action["params"]["chance"]:
+            create_new_town(towns_profile, "state", action["params"]["cost"])
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for CREATE STATE CHANNEL")
 
-            # get daily points action
-            if action["action"] == "get_daily_points":
-                if random.random() < action["params"]["chance"]:
-                    get_daily_points(towns_profile)
-                else:
-                    logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for DAILY POINTS")
 
-        towns_profile.close_profile()
+def process_join_channel(towns_profile, action):
+    # join town actions
+    if action["action"] == "join_free_channel":
+        if random.random() < action["params"]["chance"]:
+            town_link = get_new_random_town_link(towns_profile, "free")
+            if town_link:
+                join_free_town(towns_profile, town_link)
+            else:
+                logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN FREE CHANNEL wasn't done due to no link options")
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN FREE CHANNEL")
 
+    if action["action"] == "join_dynamic_channel":
+        if random.random() < action["params"]["chance"]:
+            town_link = get_new_random_town_link(towns_profile, "dynamic")
+            if town_link:
+                join_paid_town(towns_profile, town_link, "dynamic", upper_limit=action["params"]["cost_limit"])
+            else:
+                logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN DYNAMIC CHANNEL wasn't done due to no link options")
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN DYNAMIC CHANNEL")
+
+    if action["action"] == "join_state_channel":
+        if random.random() < action["params"]["chance"]:
+            if action["params"]["link"]:
+                town_link = action["params"]["link"]
+            else:
+                town_link = get_new_random_town_link(towns_profile, "state")
+
+            if town_link:
+                join_paid_town(towns_profile, town_link, "state", upper_limit=action["params"]["cost_limit"])
+            else:
+                logger.warning(f"Profile_ID: {towns_profile.profile_id}. JOIN STATE CHANNEL wasn't done due to no link options")
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN STATE CHANNEL")
+
+
+def process_write_message(towns_profile: TownsProfileManager, action: Dict[str, Dict], barrier: threading.Barrier = None):
+    # write message action
+    if action["action"] == "write_message":
+        if random.random() < action["params"]["chance"]:
+            if barrier:
+                barrier.wait()
+
+            if action["params"]["link"]:
+                # check if link is set in parameters
+                town_link = action["params"]["link"]
+            else:
+                # if link is not set in parameters -> try to get some link from the Profile parameters
+                town_link = get_random_town_link(towns_profile, action["params"]["town_type"])
+
+            if not town_link:
+                logger.warning(
+                    f"Profile_ID: {towns_profile.profile_id}. NO link with provided parameters. Trying open RANDOM TOWN with membership.")
+                # if there was no link -> try to open random town from UI
+                town_link = open_random_town(towns_profile)
+
+            if town_link:
+                # if some town was opened -> write message
+                write_n_messages(towns_profile, town_link, action["params"]["number"], action["params"]["cooldown"])
+            else:
+                logger.warning(
+                    f"Profile_ID: {towns_profile.profile_id}. WRITE MESSAGE wasn't done due to no link options")
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for WRITE MESSAGE")
+
+
+def process_daily_points(towns_profile, action):
+    # get daily points action
+    if action["action"] == "get_daily_points":
+        if random.random() < action["params"]["chance"]:
+            get_daily_points(towns_profile)
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for DAILY POINTS")
+
+
+# Finalize the profile (extracted logic)
+def finalize_profile(towns_profile):
+    extract_wallets_to_file()
+    towns_profile.close_profile()
+
+
+# Consolidated error handling
+def handle_error(towns_profile, error):
+    try:
+        finalize_profile(towns_profile)
     except Exception as e:
-        towns_profile.close_profile()
-        logger.error(f"Profile_ID: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
 
 
 def arrange_shuffled_actions(actions):
@@ -291,7 +222,7 @@ def arrange_shuffled_actions(actions):
     for action in actions:
         if action["action"] == "write_message":
             write_actions.append(action)
-        elif action["action"] == "okx_withdraw":
+        elif "withdraw" in action["action"]:
             okx_actions.append(action)
         else:
             other_actions.append(action)
@@ -308,11 +239,11 @@ def get_random_town_link(towns_profile, town_type):
     If no towns are available in the specified type, fallback to levels below:
     STATE -> DYNAMIC -> FREE
     """
-    if town_type == "STATE":
+    if town_type.upper() == "STATE":
         priority_lists = [towns_profile.state_towns, towns_profile.dynamic_towns, towns_profile.free_towns]
-    elif town_type == "DYNAMIC":
+    elif town_type.upper() == "DYNAMIC":
         priority_lists = [towns_profile.dynamic_towns, towns_profile.free_towns]
-    elif town_type == "FREE":
+    elif town_type.upper() == "FREE":
         priority_lists = [towns_profile.free_towns]
     else:
         return None  # Invalid town_type

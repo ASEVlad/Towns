@@ -16,12 +16,12 @@ class TownsProfileManager:
         self.anty_type = anty_type.upper()
         self.login_with = login_with.upper()
 
-        self.wallet = None
-        self.free_towns = None
-        self.state_towns = None
-        self.dynamic_towns = None
-        self.driver = None
-        self.linked_accounts = None
+        self.wallet : str = ""
+        self.free_towns : list = list()
+        self.state_towns : list = list()
+        self.dynamic_towns : list = list()
+        self.driver : webdriver = None
+        self.linked_accounts : set = set()
 
         # Read profile parameters from file
         self.load_profile_data()
@@ -38,11 +38,11 @@ class TownsProfileManager:
             profiles = {}
 
         profile_data = profiles.get(self.profile_id, {})
-        self.state_towns = profile_data.get("state_towns", [])
-        self.dynamic_towns = profile_data.get("dynamic_towns", [])
-        self.free_towns = profile_data.get("free_towns", [])
+        self.state_towns = profile_data.get("state_towns", list())
+        self.dynamic_towns = profile_data.get("dynamic_towns", list())
+        self.free_towns = profile_data.get("free_towns", list())
         self.wallet = profile_data.get("wallet", "")
-        self.linked_accounts = profile_data.get("linked_accounts", {})
+        self.linked_accounts = set(profile_data.get("linked_accounts", list()))
 
     def save_profile_data(self):
         try:
@@ -56,7 +56,7 @@ class TownsProfileManager:
             "dynamic_towns": self.dynamic_towns,
             "free_towns": self.free_towns,
             "wallet": self.wallet,
-            "linked_accounts": self.linked_accounts
+            "linked_accounts": list(self.linked_accounts)
         }
 
         with open(os.path.join("data", "profiles_data.json"), "w") as file:

@@ -28,18 +28,10 @@ cd Towns/
    - Or manually download from https://help.dolphin-anty.com/en/articles/7127390-basic-automation-dolphin-anty using the "Download ChromeDriver" button
 6. Unzip the downloaded files and place the geckodriver file (or geckodriver.exe for Windows) into the Town folder
 
-### 3. Set up OKX (for second launch onwards)
-1. Add all wallets from Towns to your whitelist:
-   - Go to https://www.okx.com/ua/balance/withdrawal-address
-   - Click "Add address" → "Add few addresses"
-   - Paste your addresses from `data/towns_wallets.txt` (choose ETH, Base)
-   - Click "Save addresses"
-   - CONFIRM all added addresses
-
-### 4. Open your anti-detection browser
+### 3. Open your anti-detection browser
 - This can be either Dolphin or AdsPower
 
-### 5. Run the script
+### 4. Run the script
 ```bash
 # Create and activate virtual environment
 python -m venv venv
@@ -52,11 +44,55 @@ venv\Scripts\activate     # for Windows
 python main.py
 ```
 
-
-If you don't want to create your own list of actions, you can simply use the actions below.
+**If you don't want to create your own list of actions**, you can simply use one of the actions below (just choose between binance or okx).
+I would recommend binance option since it is much easier AND you can start earn points straightaway from the first run
 Just ensure you have followed the steps mentioned above.
 
-### FIRST RUN:
+### If you use BINANCE to withdraw your funds:
+
+Set up API for binance:
+- Go to https://www.binance.com/en/my/settings/api-management
+- Create API
+- Copy paste API_KEY and SECRET_KEY to your .env file
+- Change restriction to IP restriction
+- Go to https://www.myip.com/
+- Copy paste your ip
+- Click "Enable Withdraw"
+
+#### FIRST RUN:
+```bash
+binance_withdraw -bottom_limit_range=0.0155 -top_limit_range=0.0185
+create_free_channel -chance=70%
+create_dynamic_channel -chance=50%
+create_state_channel -chance=20% -cost=0.1
+join_free_channel -chance=70%
+join_dynamic_channel -chance=50% -cost_limit=0.001
+join_state_channel -chance=30% -cost_limit=0.1
+get_daily_points -chance=95%
+write_message -chance=70% -town_type=state -number=3 -cooldown=10
+write_message -chance=70% -town_type=dynamic -number=3 -cooldown=10
+write_message -chance=70% -town_type=free -number=3 -cooldown=10
+```
+
+
+#### SECOND RUN:
+Just the same as previous, but WITHOUT withdrawing.
+
+```bash
+create_free_channel -chance=70%
+create_dynamic_channel -chance=50%
+create_state_channel -chance=20% -cost=0.1
+join_free_channel -chance=70%
+join_dynamic_channel -chance=50% -cost_limit=0.001
+join_state_channel -chance=30% -cost_limit=0.1
+get_daily_points -chance=95%
+write_message -chance=70% -town_type=state -number=3 -cooldown=10
+write_message -chance=70% -town_type=dynamic -number=3 -cooldown=10
+write_message -chance=70% -town_type=free -number=3 -cooldown=10
+```
+
+### If you use OKX to withdraw your funds:
+#### FIRST RUN:
 ```bash
 create_free_channel -chance=70%
 create_dynamic_channel -chance=50%
@@ -65,9 +101,22 @@ join_free_channel -chance=70%
 write_message -chance=100% -town_type=free -number=3 -cooldown=10
 ```
 
-### SECOND RUN:
+#### Set Up OKX API
+- Go to https://www.okx.com/ua/account/my-api
+- Generate your API
+- Copy paste your API, SECRET, PASSPHRASE(password) for the API.
+
+And now you should add all the wallets to your whitelist.
+- Go to https://www.okx.com/ua/balance/withdrawal-address
+- Click "Add address" → "Add few addresses"
+- Paste your addresses from `data/towns_wallets.txt` (choose EVM or ETH, Base)
+- click confirm all addresses
+- Click "Save addresses"
+- Done
+
+#### SECOND RUN:
 ```bash
-okx_withdraw -bottom_limit_range=0.0125 -top_limit_range=0.0175
+okx_withdraw -bottom_limit_range=0.0125 -top_limit_range=0.0175 OR binance_withdraw -bottom_limit_range=0.0125 -top_limit_range=0.0175
 create_free_channel -chance=70%
 create_dynamic_channel -chance=50%
 create_state_channel -chance=20% -cost=0.1
@@ -83,8 +132,10 @@ write_message -chance=70% -town_type=free -number=3 -cooldown=10
 I recommend depositing the cost of the Town you want to interact with into the respective wallets. 
 The link to the Town should be specified in `state_town.txt`, along with an additional deposit of 5-10 USD in ETH equivalent (approximately 0.0025-0.005 ETH at present).
 
-**Disclaimer:** All actions will be randomly executed during profile runtime, except:
+### **Disclaimer:** 
+All actions will be randomly executed during profile runtime, except:
 - `okx_withdraw`, which is executed at the beginning.
+- `binance_withdraw`, which is executed at the beginning.
 - `write_message`, which is executed at the end.
 
 
@@ -218,7 +269,21 @@ Withdraws funds from OKX to your Town wallet.
 
 **Examples:**
 ```
-okx_withdraw -bottom_limit_range=0.005 -top_limit_range=0.01
+okx_withdraw -bottom_limit_range=0.005 -top_limit_range=0.01"
 ```
 
-**Default:** `okx_withdraw -bottom_limit_range=0.0125 -top_limit_range=0.0175`
+**Default:** `binance_withdraw -bottom_limit_range=0.0125 -top_limit_range=0.0175`
+
+### 10. `binance_withdraw`
+Withdraws funds from OKX to your Town wallet.
+
+**Arguments:**
+- `-bottom_limit_range`: Minimum withdrawal amount (in ETH)
+- `-top_limit_range`: Maximum withdrawal amount (in ETH)
+
+**Examples:**
+```
+binance_withdraw -bottom_limit_range=0.005 -top_limit_range=0.01
+```
+
+**Default:** `binance_withdraw -bottom_limit_range=0.0125 -top_limit_range=0.0175`

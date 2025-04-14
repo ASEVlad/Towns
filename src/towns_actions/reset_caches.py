@@ -5,10 +5,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_profile_manager import TownsProfileManager
+from src.utils import trim_stacktrace_error
 
 
 def reset_caches(towns_profile: TownsProfileManager):
     try:
+        logger.info(f"Profile_id: {towns_profile.profile_id}. RESET CACHES action just have started!")
+
         # find and click bug_report button
         bug_report_element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='report-bug-button']")))
         bug_report_element.click()
@@ -24,4 +27,5 @@ def reset_caches(towns_profile: TownsProfileManager):
         logger.info(f"Profile_id: {towns_profile.profile_id}. Successfully RESETED CACHES!")
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
