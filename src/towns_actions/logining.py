@@ -47,7 +47,8 @@ def login_twitter(towns_profile: TownsProfileManager):
             return True
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
         raise
 
 
@@ -86,7 +87,9 @@ def login_google(towns_profile: TownsProfileManager):
             return True
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
+        raise
 
 
 def check_reauthentication(towns_profile: TownsProfileManager):
@@ -104,7 +107,8 @@ def check_reauthentication(towns_profile: TownsProfileManager):
             return False
 
     except Exception as e:
-        logger.error(f"Profile_id: {towns_profile.profile_id}. {e}")
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
 
 
 def reauthenticate(towns_profile: TownsProfileManager):
@@ -156,6 +160,7 @@ def reauthenticate(towns_profile: TownsProfileManager):
     except Exception as e:
         trimmed_error_log = trim_stacktrace_error(str(e))
         logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
+        raise
 
 
 def find_login_method_element(login_elements, method):

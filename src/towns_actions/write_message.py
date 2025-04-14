@@ -2,11 +2,11 @@ import os
 import time
 import json
 import random
+import threading
 from pathlib import Path
-from typing import Dict, List
-
 from loguru import logger
 from datetime import datetime
+from typing import Dict, List
 from numpy import floor, ceil
 
 from selenium.webdriver.common.by import By
@@ -19,6 +19,7 @@ from data.lists import basic_colors
 from src.gpt_helper.openai_helper import fetch_ai_response
 from src.towns_profile_manager import TownsProfileManager
 
+message_lock = threading.Lock()
 MESSAGE_STORE = Path(os.path.join("data", "messages.json"))
 
 
@@ -26,11 +27,13 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
     try:
         logger.info(f"Profile_id: {towns_profile.profile_id}. WRITE MESSAGES action just have started!")
 
+        time.sleep(random.uniform(0, time_delay))
+
         # open town
         towns_profile.driver.get(town_link)
 
         # check if profile is a member of the town
-        check_element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located(
+        check_element = WebDriverWait(towns_profile.driver, 40).until(EC.visibility_of_element_located(
             (By.XPATH, "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]")))
 
         # check if profile is a member of the town
@@ -43,7 +46,7 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
 
         # wait till Send_message element is loaded
         new_message_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Send a message to ')]")))
+            EC.visibility_of_element_located((By.XPATH, "//*[@data-testid='send-message-text-box']")))
 
         for i in range(n_messages):
             # get last 5 messages
@@ -127,7 +130,7 @@ Here is the flow of messages in the chat.
 {flow_of_messages}
 
 Generate next message, please.
-        """
+You: """
     else:
         content_message = f"""
 You are a casual Discord chat participant in your teens/early 20s. Your task is to start the conversation.
@@ -178,17 +181,19 @@ def store_message(town_link: str, sender_wallet: str, text: str, channel_name: s
         messages[town_link][channel_name].append(msg)
 
         # Save back to file
-        with open(MESSAGE_STORE, "w") as f:
-            json.dump(messages, f, indent=2)
+        with message_lock:
+            with open(MESSAGE_STORE, "w") as f:
+                json.dump(messages, f, indent=2)
     except Exception as e:
         logger.error(f"Error storing message: {e}")
 
 
 def load_messages():
-    if MESSAGE_STORE.exists():
-        with open(MESSAGE_STORE, "r") as f:
-            return json.load(f)
-    return {}  # return empty dict if file doesn't exist
+    with message_lock:
+        if MESSAGE_STORE.exists():
+            with open(MESSAGE_STORE, "r") as f:
+                return json.load(f)
+        return {}  # return empty dict if file doesn't exist
 
 
 def get_last_messages_locally(town_link: str, channel_name: str = "general", n: int = 5) -> List[Dict[str, str]]:

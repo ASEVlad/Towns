@@ -1,7 +1,8 @@
+import os
 from loguru import logger
+from dotenv import load_dotenv
 
 from src import logic
-from src.logic import run_actions
 from src.utils import parse_actions
 from src.checks import check_csv_file, check_env_file, check_actions_file
 
@@ -14,14 +15,16 @@ def main():
     else:
         return False
 
-    # parse profiles
-    profile_groups = logic.parse_profiles()
+    load_dotenv()
+    group_of_n = int(os.getenv('GROUP_OF_N'))
 
+    # create group of profiles to run in concurrent way
+    profile_groups = logic.generate_profile_groups(group_of_n)
     # parse actions to perform
     parsed_actions = parse_actions('actions.txt')
 
-    for towns_profile in profile_groups:
-        run_actions(towns_profile, parsed_actions)
+    for profile_group in profile_groups:
+        logic.run_profile_group(profile_group, parsed_actions)
 
 
 if __name__ == "__main__":

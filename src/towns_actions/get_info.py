@@ -34,14 +34,14 @@ def get_connected_wallet(towns_profile: TownsProfileManager):
         # check if there is already wallet available
         wallet_elements = profile_box_element.find_elements(By.XPATH, "//span[contains(text(), '0x')]")
         if len(wallet_elements) == 1:
-            return retrieve_wallet_with_validation(towns_profile, copy_connected_wallet_in_profile_box)
+            towns_profile.wallet = retrieve_wallet_with_validation(towns_profile, copy_connected_wallet_in_profile_box)
         else:
             # find and click Linked Wallets button
             linked_wallets_element = WebDriverWait(towns_profile.driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Linked Wallets')]")))
             linked_wallets_element.click()
 
-            return retrieve_wallet_with_validation(towns_profile, copy_connected_wallet_in_wallets)
+            towns_profile.wallet = retrieve_wallet_with_validation(towns_profile, copy_connected_wallet_in_wallets)
     except Exception as e:
         trimmed_error_log = trim_stacktrace_error(str(e))
         logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
@@ -60,7 +60,6 @@ def retrieve_wallet_with_validation(towns_profile, copy_wallet_function):
             return copied_wallet
         else:
             prev_copied_wallet = copied_wallet
-
 
 
 def copy_connected_wallet_in_wallets(towns_profile: TownsProfileManager):

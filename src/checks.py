@@ -66,7 +66,7 @@ def check_env_file(env_file_path: str = '.env') -> bool:
     # Check and set GROUP_OF_N if not provided
     group_of_n = os.getenv('GROUP_OF_N')
     if group_of_n is None or group_of_n.strip() == '':
-        default_n = '5'
+        default_n = '2'
         os.environ['GROUP_OF_N'] = default_n
         logger.info(f"GROUP_OF_N not provided, set to default: {default_n}")
 

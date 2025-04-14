@@ -1,6 +1,7 @@
 import os
-import requests
 import json
+import requests
+import threading
 from dotenv import load_dotenv
 
 from selenium import webdriver
@@ -9,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 
 from src.utils import get_geckodriver_path
 
+message_lock = threading.Lock()
 
 class TownsProfileManager:
     def __init__(self, profile_id: str, anty_type: str, login_with: str):
@@ -46,8 +48,9 @@ class TownsProfileManager:
 
     def save_profile_data(self):
         try:
-            with open(os.path.join("data", "profiles_data.json"), "r") as file:
-                profiles = json.load(file)
+            with message_lock:
+                with open(os.path.join("data", "profiles_data.json"), "r") as file:
+                    profiles = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             profiles = {}
 
@@ -59,8 +62,9 @@ class TownsProfileManager:
             "linked_accounts": list(self.linked_accounts)
         }
 
-        with open(os.path.join("data", "profiles_data.json"), "w") as file:
-            json.dump(profiles, file, indent=4)
+        with message_lock:
+            with open(os.path.join("data", "profiles_data.json"), "w") as file:
+                json.dump(profiles, file, indent=4)
 
     def open_profile(self):
         if self.anty_type == "ADSPOWER":

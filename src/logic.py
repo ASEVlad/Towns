@@ -18,34 +18,39 @@ from src.towns_profile_manager import TownsProfileManager
 from src.utils import extract_wallets_to_file, trim_stacktrace_error
 
 
-def run_profile_group(profile_group: List[TownsProfileManager], actions: List[Dict[str, any]]):
-    barrier = threading.Barrier(len(profile_group))  # Barrier for write_message synchronization
+def run_profile_group(profile_group: List, actions: List[Dict[str, any]]):
+    if len(profile_group) == 1:
+        barrier = None
+    else:
+        barrier = threading.Barrier(len(profile_group))
 
-    # Start threads for each profile
     threads = []
     for profile in profile_group:
-        t = threading.Thread(target=run_actions, args=(profile, actions, barrier))
+        t = threading.Thread(
+            target=run_actions,
+            args=(profile, actions, barrier)
+        )
         threads.append(t)
         t.start()
 
-    # Wait for all threads to complete
     for t in threads:
         t.join()
 
-    logger.warning(f"GROUP FINISHED. All profiles completed.")
+    logger.info("GROUP FINISHED. All profiles completed.")
 
 
-def run_actions(towns_profile: TownsProfileManager, actions: List[Dict[str, any]]):
+def run_actions(towns_profile: TownsProfileManager, actions: List[Dict[str, any]], barrier=None):
     try:
         shuffled_actions = arrange_shuffled_actions(actions)
         execute_initial_actions(towns_profile)
 
         for action in shuffled_actions:
-            handle_action(towns_profile, action)
+            handle_action(towns_profile, action, barrier)
 
         finalize_profile(towns_profile)
     except Exception as e:
         handle_error(towns_profile, e)
+        barrier.abort()
 
 
 def execute_initial_actions(towns_profile):
@@ -73,17 +78,17 @@ def authenticate_user(towns_profile):
             raise "Unsuccessful Reauthentication"
 
 
-def handle_action(towns_profile, action):
+def handle_action(towns_profile, action, barrier=None):
     if action["action"] in ["okx_withdraw", "binance_withdraw"]:
         process_withdrawal(towns_profile, action)
     elif action["action"].startswith("create_"):
         process_create_channel(towns_profile, action)
     elif action["action"].startswith("join_"):
         process_join_channel(towns_profile, action)
-    elif action["action"] == "write_message":
-        process_write_message(towns_profile, action)
     elif action["action"] == "get_daily_points":
         process_daily_points(towns_profile, action)
+    elif action["action"] == "write_message":
+        process_write_message(towns_profile, action, barrier)
 
 
 # Extract repetitive action handling logic
@@ -161,11 +166,16 @@ def process_join_channel(towns_profile, action):
 
 
 def process_write_message(towns_profile: TownsProfileManager, action: Dict[str, Dict], barrier: threading.Barrier = None):
+    if barrier:
+        try:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. Waiting for barrier to WRITE MESSAGE.")
+            barrier.wait()  # no timeout
+        except threading.BrokenBarrierError:
+            pass
+
     # write message action
     if action["action"] == "write_message":
         if random.random() < action["params"]["chance"]:
-            if barrier:
-                barrier.wait()
 
             if action["params"]["link"]:
                 # check if link is set in parameters
@@ -207,6 +217,9 @@ def finalize_profile(towns_profile):
 
 # Consolidated error handling
 def handle_error(towns_profile, error):
+    trimmed_error_log = trim_stacktrace_error(str(error))
+    logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
+
     try:
         finalize_profile(towns_profile)
     except Exception as e:
@@ -339,21 +352,3 @@ def generate_profile_groups(group_of_n=5):
         start += size
 
     return groups
-
-
-def main_groups(check_csv_file, check_env_file, check_actions_file, load_dotenv, os, logic, parse_actions):
-    if check_csv_file() and check_env_file() and check_actions_file():
-        logger.info("All files are set correctly")
-    else:
-        return False
-
-    load_dotenv()
-    group_of_n = int(os.getenv('GROUP_OF_N'))
-
-    # create group of profiles to run in concurrent way
-    profile_groups = logic.generate_profile_groups(group_of_n)
-    # parse actions to perform
-    parsed_actions = parse_actions('actions.txt')
-
-    for profile_group in profile_groups:
-        logic.run_profile_group(profile_group, parsed_actions)

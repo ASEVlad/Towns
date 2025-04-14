@@ -4,7 +4,10 @@ import time
 import json
 import random
 import platform
+import threading
 from typing import List, Dict
+
+message_lock = threading.Lock()
 
 # Define the allowed actions and their possible arguments with default values
 DEFAULT_PARAMS = {
@@ -94,8 +97,9 @@ def save_town_link(town_link, town_type):
     elif town_type == "state":
         pass
 
-    with open(towns_links_path, 'a') as file:
-        file.write("\n" + town_link)
+    with message_lock:
+        with open(towns_links_path, 'a') as file:
+            file.write("\n" + town_link)
 
 
 def send_keys(element, text):
@@ -160,16 +164,18 @@ def extract_wallets_to_file():
     output_file_path = os.path.join("data", "towns_wallets.txt")
 
     # Read the JSON file
-    with open(json_file_path, 'r') as file:
-        data = json.load(file)
+    with message_lock:
+        with open(json_file_path, 'r') as file:
+            data = json.load(file)
 
     # Extract wallets, filtering out empty strings
     wallets = [profile["wallet"] for profile in data.values() if profile["wallet"]]
 
     # Write wallets to text file
-    with open(output_file_path, 'w') as file:
-        for wallet in wallets:
-            file.write(f"{wallet}\n")
+    with message_lock:
+        with open(output_file_path, 'w') as file:
+            for wallet in wallets:
+                file.write(f"{wallet}\n")
 
 
 def trim_stacktrace_error(log: str) -> str:
