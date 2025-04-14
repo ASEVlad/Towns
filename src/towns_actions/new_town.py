@@ -131,14 +131,14 @@ def join_free_town(towns_profile: TownsProfileManager, town_link):
         towns_profile.driver.get(town_link)
 
         # check if you already a member
-        share_link_element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located(
+        share_link_element = WebDriverWait(towns_profile.driver, 30).until(EC.visibility_of_element_located(
             (By.XPATH, "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]")))
         if share_link_element.text == "Share Town Link":
             logger.info("You are already a member of this town")
             return False
 
         # wait till the page is loaded
-        WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Join for Free')]")))
+        WebDriverWait(towns_profile.driver, 30).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Join for Free')]")))
 
         # find and click Join button
         button_elements = towns_profile.driver.find_elements(By.XPATH, "//button[@type='button']")
@@ -146,7 +146,7 @@ def join_free_town(towns_profile: TownsProfileManager, town_link):
             if "Join for Free" in button_element.text:
                 button_element.click()
 
-        WebDriverWait(towns_profile.driver, 120).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Share Town Link')]")))
+        WebDriverWait(towns_profile.driver, 180).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Share Town Link')]")))
         time.sleep(2)
 
         enter_username(towns_profile)
@@ -241,4 +241,4 @@ def enter_username(towns_profile):
         submit_username_element = towns_profile.driver.find_element(By.XPATH,
                                                                     "//button[@data-testid='submit-username-button']")
         submit_username_element.click()
-        time.sleep(1)
+        time.sleep(2)

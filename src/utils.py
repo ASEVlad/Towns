@@ -90,13 +90,15 @@ def save_town_link(town_link, town_type):
     towns_folder = os.path.join("data", "towns_links")
     towns_links_path = None
 
-    if town_type == "free":
+    if town_type.upper() == "FREE":
         towns_links_path = os.path.join(towns_folder, "free_towns.txt")
-    elif town_type == "dynamic":
+    elif town_type.upper() == "DYNAMIC":
         towns_links_path = os.path.join(towns_folder, "dynamic_towns.txt")
-    elif town_type == "state":
+    elif town_type.upper() == "STATE":
         pass
 
+    if not towns_links_path:
+        return
     with message_lock:
         with open(towns_links_path, 'a') as file:
             file.write("\n" + town_link)

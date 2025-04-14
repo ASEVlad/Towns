@@ -15,7 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_actions.new_town import enter_username
 from src.utils import send_keys, trim_stacktrace_error, clean_text
-from data.lists import basic_colors
+from data.lists import basic_colors, topics
 from src.gpt_helper.openai_helper import fetch_ai_response
 from src.towns_profile_manager import TownsProfileManager
 
@@ -43,6 +43,9 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
 
         # Enter username if needed
         enter_username(towns_profile)
+
+        # join general channel if needed
+        join_general_channel(towns_profile)
 
         # wait till Send_message element is loaded
         new_message_element = WebDriverWait(towns_profile.driver, 20).until(
@@ -102,7 +105,7 @@ def get_last_messages(towns_profile, n_messages=5):
 
 
 def generate_prompt(last_messages, current_wallet):
-    if len(last_messages) >= 0:
+    if len(last_messages) > 0:
         if random.random() < 0.05:
             random_topic = random.sample(basic_colors, 1)[0]
             change_topic = f"Change topic of the conversation on {random_topic}"
@@ -123,6 +126,7 @@ Rules:
 - Never mention that you're an AI
 - It's ok to make small typos sometimes
 - Mix up your style - don't be repetitive with phrases
+- Generate only message without anything else. Just plain text.
 
 {change_topic}.
 
@@ -132,6 +136,7 @@ Here is the flow of messages in the chat.
 Generate next message, please.
 You: """
     else:
+        random_topic = random.sample(topics, 1)[0]
         content_message = f"""
 You are a casual Discord chat participant in your teens/early 20s. Your task is to start the conversation.
 Rules:
@@ -143,6 +148,8 @@ Rules:
 - Never mention that you're an AI
 - It's ok to make small typos sometimes
 - Mix up your style - don't be repetitive with phrases
+- Generate only message without anything else. Just plain text.
+Topic: {random_topic}
 
 Generate first message, please.
         """
@@ -207,3 +214,9 @@ def get_last_messages_locally(town_link: str, channel_name: str = "general", n: 
         print(f"Error retrieving messages: {e}")
         return []
 
+
+def join_general_channel(towns_profile):
+    el = towns_profile.driver.find_elements(By.XPATH, "//button[contains(text(), 'Join Channel')]")
+    if len(el) > 0:
+        el[0].click()
+        time.sleep(2)
