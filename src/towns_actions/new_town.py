@@ -135,7 +135,7 @@ def join_free_town(towns_profile: TownsProfileManager, town_link):
         share_link_element = WebDriverWait(towns_profile.driver, 30).until(EC.visibility_of_element_located(
             (By.XPATH, "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]")))
         if share_link_element.text == "Share Town Link":
-            logger.info("You are already a member of this town")
+            logger.info(f"Profile_id: {towns_profile.profile_id}. You are a member of this town. Can NOT JOIN TOWN action.")
             return False
 
         # wait till the page is loaded
@@ -171,7 +171,8 @@ def join_paid_town(towns_profile: TownsProfileManager, town_link, town_type, upp
         share_link_element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located(
             (By.XPATH, "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]")))
         if share_link_element.text == "Share Town Link":
-            logger.warning(f"Profile_id: {towns_profile.profile_id}. You are already a member of this town")
+            logger.info(f"Profile_id: {towns_profile.profile_id}. You are a member of this town. Can NOT JOIN TOWN action.")
+            change_type_of_town(towns_profile, town_type)
             return False
 
         # find price element
@@ -262,3 +263,18 @@ def generate_town_name() -> str:
     )
 
     return new_name
+
+def change_type_of_town(towns_profile: TownsProfileManager, town_type: str):
+    town_link = towns_profile.driver.current_url
+    town_link = town_link[:town_link.rfind("/channels")]
+
+    if town_link in towns_profile.other_towns:
+        if town_type.upper() == "STATE":
+            towns_profile.state_towns.append(town_link)
+        elif town_type.upper() == "DYNAMIC":
+            towns_profile.dynamic_towns.append(town_link)
+        elif town_type.upper() == "FREE":
+            towns_profile.free_towns.append(town_link)
+
+        towns_profile.other_towns.remove(town_link)
+        logger.info(f"Profile_id: {towns_profile.profile_id}. Town type successfully changed")

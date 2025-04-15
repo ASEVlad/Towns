@@ -9,7 +9,7 @@ from loguru import logger
 from src.withdraw import binance_withdraw, okx_withdraw, wait_for_balance
 from src.towns_actions.new_town import create_new_town, join_free_town, join_paid_town
 from src.towns_actions.get_daily_points import get_daily_points
-from src.towns_actions.profile_info import get_connected_wallet, set_profile_avatar
+from src.towns_actions.profile_info import get_connected_wallet, set_profile_avatar, get_existed_towns
 from src.towns_actions.logining import login_twitter, login_google, check_reauthentication, reauthenticate
 from src.towns_actions.open_random import open_random_town
 from src.towns_actions.open_towns import open_towns
@@ -62,6 +62,9 @@ def execute_initial_actions(towns_profile):
 
     if not towns_profile.wallet:
         get_connected_wallet(towns_profile)
+
+    if not towns_profile.other_towns:
+        get_existed_towns(towns_profile)
 
 
 def authenticate_user(towns_profile):
@@ -264,11 +267,11 @@ def get_random_town_link(towns_profile, town_type):
     STATE -> DYNAMIC -> FREE
     """
     if town_type.upper() == "STATE":
-        priority_lists = [towns_profile.state_towns, towns_profile.dynamic_towns, towns_profile.free_towns]
+        priority_lists = [towns_profile.state_towns, towns_profile.dynamic_towns, towns_profile.free_towns, towns_profile.other_towns]
     elif town_type.upper() == "DYNAMIC":
-        priority_lists = [towns_profile.dynamic_towns, towns_profile.free_towns]
+        priority_lists = [towns_profile.dynamic_towns, towns_profile.free_towns, towns_profile.other_towns]
     elif town_type.upper() == "FREE":
-        priority_lists = [towns_profile.free_towns]
+        priority_lists = [towns_profile.free_towns, towns_profile.other_towns]
     else:
         return None  # Invalid town_type
 

@@ -22,6 +22,7 @@ class TownsProfileManager:
         self.free_towns : list = list()
         self.state_towns : list = list()
         self.dynamic_towns : list = list()
+        self.other_towns : list = list()
         self.driver : webdriver = None
         self.linked_accounts : set = set()
 
@@ -43,6 +44,7 @@ class TownsProfileManager:
         self.state_towns = profile_data.get("state_towns", list())
         self.dynamic_towns = profile_data.get("dynamic_towns", list())
         self.free_towns = profile_data.get("free_towns", list())
+        self.other_towns = profile_data.get("other_towns", list())
         self.wallet = profile_data.get("wallet", "")
         self.linked_accounts = set(profile_data.get("linked_accounts", list()))
 
@@ -58,6 +60,7 @@ class TownsProfileManager:
             "state_towns": self.state_towns,
             "dynamic_towns": self.dynamic_towns,
             "free_towns": self.free_towns,
+            "other_towns": self.other_towns,
             "wallet": self.wallet,
             "linked_accounts": list(self.linked_accounts)
         }
@@ -71,6 +74,8 @@ class TownsProfileManager:
             self.driver = self.open_ads_power_profile()
         elif self.anty_type == "DOLPHIN":
             self.driver = self.open_dolphin_profile()
+        self.driver.set_page_load_timeout(20)
+
         return self.driver
 
     def open_ads_power_profile(self):
