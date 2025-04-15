@@ -40,7 +40,7 @@ class TownsProfileManager:
         except (FileNotFoundError, json.JSONDecodeError):
             profiles = {}
 
-        profile_data = profiles.get(self.profile_id, {})
+        profile_data = profiles.get(str(self.profile_id), {})
         self.state_towns = profile_data.get("state_towns", list())
         self.dynamic_towns = profile_data.get("dynamic_towns", list())
         self.free_towns = profile_data.get("free_towns", list())

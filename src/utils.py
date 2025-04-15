@@ -22,6 +22,7 @@ DEFAULT_PARAMS = {
     'okx_withdraw': {'network': "base"},
     'binance_withdraw': {'network': "base"},
     'set_profile_avatar': {'chance': 1.0},
+    'write_review': {'chance': 1.0, 'town_type': 'random', "link": None},
 }
 
 

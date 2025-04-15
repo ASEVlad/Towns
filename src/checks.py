@@ -112,7 +112,8 @@ def check_actions_file(file_path: str = "actions.txt") -> bool:
             "get_daily_points",
             "okx_withdraw",
             "binance_withdraw",
-            "set_profile_avatar"
+            "set_profile_avatar",
+            "write_review"
         }
 
         # Valid parameters for each action (based on README)
@@ -127,7 +128,8 @@ def check_actions_file(file_path: str = "actions.txt") -> bool:
             "get_daily_points": {"chance"},
             "okx_withdraw": {"bottom_limit_range", "top_limit_range", "network"},
             "binance_withdraw": {"bottom_limit_range", "top_limit_range", "network"},
-            "set_profile_avatar": {"chance"}
+            "set_profile_avatar": {"chance"},
+            "write_review": {"chance", "town_type", "link"}
         }
 
         # Check each action

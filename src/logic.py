@@ -6,12 +6,12 @@ from numpy import floor
 from typing import List, Dict
 from loguru import logger
 
+from src.towns_actions.write_review import write_review
 from src.withdraw import binance_withdraw, okx_withdraw, wait_for_balance
 from src.towns_actions.new_town import create_new_town, join_free_town, join_paid_town
 from src.towns_actions.get_daily_points import get_daily_points
 from src.towns_actions.profile_info import get_connected_wallet, set_profile_avatar, get_existed_towns
 from src.towns_actions.logining import login_twitter, login_google, check_reauthentication, reauthenticate
-from src.towns_actions.open_random import open_random_town
 from src.towns_actions.open_towns import open_towns
 from src.towns_actions.write_message import write_n_messages
 from src.towns_profile_manager import TownsProfileManager
@@ -91,9 +91,11 @@ def handle_action(towns_profile, action, barrier=None):
     elif action["action"] == "get_daily_points":
         process_daily_points(towns_profile, action)
     elif action["action"] == "set_profile_avatar":
-        process_setting_profile_avatar(towns_profile, action)
+        process_set_profile_avatar(towns_profile, action)
     elif action["action"] == "write_message":
         process_write_message(towns_profile, action, barrier)
+    elif action["action"] == "write_review":
+        process_write_review(towns_profile, action)
 
 
 # Extract repetitive action handling logic
@@ -189,18 +191,12 @@ def process_write_message(towns_profile: TownsProfileManager, action: Dict[str, 
                 # if link is not set in parameters -> try to get some link from the Profile parameters
                 town_link = get_random_town_link(towns_profile, action["params"]["town_type"])
 
-            if not town_link:
-                logger.warning(
-                    f"Profile_ID: {towns_profile.profile_id}. NO link with provided parameters. Trying open RANDOM TOWN with membership.")
-                # if there was no link -> try to open random town from UI
-                town_link = open_random_town(towns_profile)
-
             if town_link:
                 # if some town was opened -> write message
                 write_n_messages(towns_profile, town_link, action["params"]["number"], action["params"]["cooldown"])
             else:
                 logger.warning(
-                    f"Profile_ID: {towns_profile.profile_id}. WRITE MESSAGE wasn't done due to no link options")
+                    f"Profile_ID: {towns_profile.profile_id}. WRITE MESSAGE wasn't done due to no link error")
         else:
             logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for WRITE MESSAGE")
 
@@ -214,13 +210,29 @@ def process_daily_points(towns_profile, action):
             logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for DAILY POINTS")
 
 
-def process_setting_profile_avatar(towns_profile, action):
+def process_set_profile_avatar(towns_profile, action):
     # get daily points action
     if action["action"] == "set_profile_avatar":
         if random.random() < action["params"]["chance"]:
             set_profile_avatar(towns_profile)
         else:
             logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for SET PROFILE AVATAR")
+
+
+def process_write_review(towns_profile, action):
+    if action["action"] == "write_review":
+        if random.random() < action["params"]["chance"]:
+            if action["params"]["link"]:
+                town_link = action["params"]["link"]
+            else:
+                town_link = get_random_town_link(towns_profile, action["params"]["town_type"])
+
+            if town_link:
+                write_review(towns_profile, town_link)
+            else:
+                logger.warning(f"Profile_ID: {towns_profile.profile_id}. WRITE REVIEW wasn't done due to no link error")
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for JOIN STATE CHANNEL")
 
 
 # Finalize the profile (extracted logic)
@@ -266,6 +278,10 @@ def get_random_town_link(towns_profile, town_type):
     If no towns are available in the specified type, fallback to levels below:
     STATE -> DYNAMIC -> FREE
     """
+    if town_type.upper() == "RANDOM":
+        all_towns = towns_profile.state_towns + towns_profile.dynamic_towns + towns_profile.free_towns + towns_profile.other_towns
+        return random.choice(all_towns)
+
     if town_type.upper() == "STATE":
         priority_lists = [towns_profile.state_towns, towns_profile.dynamic_towns, towns_profile.free_towns, towns_profile.other_towns]
     elif town_type.upper() == "DYNAMIC":

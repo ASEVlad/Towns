@@ -321,3 +321,18 @@ set_profile_avatar -chance=0.9
 ```
 
 **Default:** `set_profile_avatar -chance=1.0`
+
+### 12. `write_review`
+Withdraws funds from OKX to your Town wallet.
+
+**Arguments:**
+- `-chance`: Probability of execution
+- `-town_type`: Type of town to write messages in ("free", "dynamic", "state" or "random")
+- `-link`: Specific town link (optional)
+
+**Examples:**
+```
+write_review -chance=0.9 -link=https://app.towns.com/t/0xdc443716b9c203ff3ee9f3631182bfedf205dac8/
+```
+
+**Default:** `write_review -chance=1.0 -town_type=random`
