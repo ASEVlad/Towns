@@ -5,6 +5,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from src.gpt_helper.openai_helper import generate_username_avatar
+from src.towns_actions.new_town import generate_username
 from src.towns_profile_manager import TownsProfileManager
 from src.utils import trim_stacktrace_error
 
@@ -87,3 +89,41 @@ def copy_connected_wallet_in_profile_box(towns_profile: TownsProfileManager):
     copy_wallet_element.click()
 
     return pyperclip.paste()
+
+
+def set_profile_avatar(towns_profile: TownsProfileManager):
+    try:
+        logger.info(f"Profile_id: {towns_profile.profile_id}. SET PROFILE AVATAR action just have started!")
+
+        # wait till open the page. find user-profile-button
+        user_profile_button_element = WebDriverWait(towns_profile.driver, 20).until(
+            EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='user-profile-button']")))
+
+        # check if profile_box is already opened
+        check_elements = towns_profile.driver.find_elements(By.XPATH, "//span[@data-testid='upload-image-container']")
+        if not check_elements:
+            # click user-profile-button if Profile box is not opened
+            user_profile_button_element.click()
+
+        # find image_profile_element
+        new_image_profile_element = WebDriverWait(towns_profile.driver, 20).until(
+            EC.visibility_of_element_located((By.XPATH, "//input[@data-testid='user-avatar-upload']")))
+
+        username = generate_username()
+        avatar_path = generate_username_avatar(username)
+
+        new_image_profile_element.send_keys(avatar_path)
+        towns_profile.driver.implicitly_wait(0.5)
+
+        while True:
+            try:
+                WebDriverWait(towns_profile.driver, 2).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Uploading Image')]")))
+            except:
+                break
+
+        logger.info(f"Profile_id: {towns_profile.profile_id}. Successfully SET PROFILE AVATAR!")
+
+    except Exception as e:
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {trimmed_error_log}")
+        raise

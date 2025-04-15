@@ -2,6 +2,7 @@
 config.py
 .idea
 data/towns_images/*
+data/avatars_images/*
 data/chromedriver
 data/towns_wallets.txt
 profiles.csv

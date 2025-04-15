@@ -20,7 +20,8 @@ DEFAULT_PARAMS = {
     'write_message': {'chance': 1.0, 'town_type': 'state', 'number': 3, 'cooldown': 20, "link": None},
     'get_daily_points': {'chance': 1.0},
     'okx_withdraw': {'network': "base"},
-    'binance_withdraw': {'chance': "base"},
+    'binance_withdraw': {'network': "base"},
+    'set_profile_avatar': {'chance': 1.0},
 }
 
 

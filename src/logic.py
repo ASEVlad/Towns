@@ -9,7 +9,7 @@ from loguru import logger
 from src.withdraw import binance_withdraw, okx_withdraw, wait_for_balance
 from src.towns_actions.new_town import create_new_town, join_free_town, join_paid_town
 from src.towns_actions.get_daily_points import get_daily_points
-from src.towns_actions.get_info import get_connected_wallet
+from src.towns_actions.profile_info import get_connected_wallet, set_profile_avatar
 from src.towns_actions.logining import login_twitter, login_google, check_reauthentication, reauthenticate
 from src.towns_actions.open_random import open_random_town
 from src.towns_actions.open_towns import open_towns
@@ -87,6 +87,8 @@ def handle_action(towns_profile, action, barrier=None):
         process_join_channel(towns_profile, action)
     elif action["action"] == "get_daily_points":
         process_daily_points(towns_profile, action)
+    elif action["action"] == "set_profile_avatar":
+        process_setting_profile_avatar(towns_profile, action)
     elif action["action"] == "write_message":
         process_write_message(towns_profile, action, barrier)
 
@@ -207,6 +209,15 @@ def process_daily_points(towns_profile, action):
             get_daily_points(towns_profile)
         else:
             logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for DAILY POINTS")
+
+
+def process_setting_profile_avatar(towns_profile, action):
+    # get daily points action
+    if action["action"] == "set_profile_avatar":
+        if random.random() < action["params"]["chance"]:
+            set_profile_avatar(towns_profile)
+        else:
+            logger.info(f"Profile_ID: {towns_profile.profile_id}. BAD LUCK for SET PROFILE AVATAR")
 
 
 # Finalize the profile (extracted logic)

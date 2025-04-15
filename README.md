@@ -308,3 +308,16 @@ binance_withdraw -bottom_limit_range=0.005 -top_limit_range=0.01
 ```
 
 **Default:** `binance_withdraw -bottom_limit_range=0.0125 -top_limit_range=0.0175`
+
+### 11. `set_profile_avatar`
+Withdraws funds from OKX to your Town wallet.
+
+**Arguments:**
+- `-chance`: Probability of execution
+
+**Examples:**
+```
+set_profile_avatar -chance=0.9
+```
+
+**Default:** `set_profile_avatar -chance=1.0`

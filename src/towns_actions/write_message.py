@@ -51,6 +51,9 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
         new_message_element = WebDriverWait(towns_profile.driver, 20).until(
             EC.visibility_of_element_located((By.XPATH, "//*[@data-testid='send-message-text-box']")))
 
+        # Enter username if needed
+        enter_username(towns_profile)
+
         for i in range(n_messages):
             # get last 5 messages
             last_messages = get_last_messages_locally(town_link, n=5)
@@ -64,9 +67,6 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
             new_message_element = new_message_element.find_element(By.XPATH, "..").find_element(By.XPATH, "//div[@role='textbox']")
             send_keys(new_message_element, next_message_cleaned)
             time.sleep(1)
-
-            # Enter username if needed
-            enter_username(towns_profile)
 
             # find and click send button
             send_message_element = towns_profile.driver.find_element(By.XPATH, "//button[@type='button' and @data-testid='submit']")
@@ -109,7 +109,7 @@ def get_last_messages(towns_profile, n_messages=5):
 
 def generate_prompt(last_messages, current_wallet):
     if len(last_messages) > 0:
-        if random.random() < 0.05:
+        if random.random() < 1/13:
             random_topic = random.sample(basic_colors, 1)[0]
             change_topic = f"Change topic of the conversation on {random_topic}"
         else:
