@@ -117,10 +117,14 @@ def generate_prompt(last_messages, current_wallet):
 
         flow_of_messages = generate_message_flow(last_messages, current_wallet)
 
+        mean_limit_words = random.randint(3, 15)
+        low_limit_words = max(2, mean_limit_words - random.randint(1, 3))
+        top_limit_words = max(3, mean_limit_words + random.randint(1, 3))
+
         content_message = f"""
 You are a casual Discord chat participant in your teens/early 20s. Your task is to continue the conversation naturally based on the previous messages.
 Rules:
-- Keep responses between 3-15 words
+- Keep responses between {low_limit_words}-{top_limit_words} words
 - Stay in context of the conversation
 - Be casual and informal, like a real Discord user
 - Use minimal punctuation (occasional commas are ok)

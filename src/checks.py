@@ -182,7 +182,7 @@ def check_actions_file(file_path: str = "actions.txt") -> bool:
 
             if "town_type" in params:
                 town_type = params["town_type"]
-                if town_type not in {"free", "dynamic", "state"}:
+                if town_type not in {"free", "dynamic", "state", "random"}:
                     logger.error(f"Invalid town_type value {town_type} for action {action_name} - must be 'free', 'dynamic', or 'state'")
                     return False
 
