@@ -1,4 +1,3 @@
-import time
 from loguru import logger
 from selenium.webdriver.common.by import By
 
@@ -25,7 +24,11 @@ def update_towns(towns_profile: TownsProfileManager):
                             button_element.click()
 
                             # wait till Send_message element is loaded
-                            wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Send a message to ')]")
+                            wait_until_element_is_visible(
+                                towns_profile,
+                                By.XPATH,
+                                "//*[@data-testid='send-message-text-box']"
+                            )
 
                             logger.info(f"Profile_id: {towns_profile.profile_id}. Successfully UPDATED town!")
                 except:

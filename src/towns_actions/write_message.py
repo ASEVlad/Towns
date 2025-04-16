@@ -11,6 +11,7 @@ from numpy import floor, ceil
 from selenium.webdriver.common.by import By
 
 from src.towns_actions.new_town import enter_username
+from src.towns_actions.update_towns import update_towns
 from src.utils import send_keys, trim_stacktrace_error, clean_text, wait_until_element_is_visible
 from data.lists import basic_colors, topics
 from src.gpt_helper.openai_helper import fetch_ai_response
@@ -59,6 +60,9 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
         enter_username(towns_profile)
 
         for i in range(n_messages):
+            # try update towns
+            try_update_towns(towns_profile)
+
             # get last 5 messages
             last_messages = get_last_messages_locally(town_link, n=5)
 
@@ -231,3 +235,7 @@ def join_general_channel(towns_profile):
     if len(el) > 0:
         el[0].click()
         time.sleep(2)
+
+def try_update_towns(towns_profile: TownsProfileManager, chance: float = 0.2):
+    if random.random() < chance:
+        update_towns(towns_profile)
