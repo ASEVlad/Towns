@@ -8,13 +8,10 @@ from loguru import logger
 from datetime import datetime
 from typing import Dict, List
 from numpy import floor, ceil
-
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_actions.new_town import enter_username
-from src.utils import send_keys, trim_stacktrace_error, clean_text
+from src.utils import send_keys, trim_stacktrace_error, clean_text, wait_until_element_is_visible
 from data.lists import basic_colors, topics
 from src.gpt_helper.openai_helper import fetch_ai_response
 from src.towns_profile_manager import TownsProfileManager
@@ -33,8 +30,12 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
         time.sleep(random.uniform(0, time_delay))
 
         # check if profile is a member of the town
-        check_element = WebDriverWait(towns_profile.driver, 40).until(EC.visibility_of_element_located(
-            (By.XPATH, "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]")))
+        check_element = wait_until_element_is_visible(
+            towns_profile,
+            By.XPATH,
+            "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]",
+            timeout=60
+        )
 
         # check if profile is a member of the town
         if "Share Town Link" not in check_element.text:
@@ -48,8 +49,11 @@ def write_n_messages(towns_profile: TownsProfileManager, town_link, n_messages=1
         join_general_channel(towns_profile)
 
         # wait till Send_message element is loaded
-        new_message_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//*[@data-testid='send-message-text-box']")))
+        new_message_element = wait_until_element_is_visible(
+            towns_profile,
+            By.XPATH,
+            "//*[@data-testid='send-message-text-box']"
+        )
 
         # Enter username if needed
         enter_username(towns_profile)

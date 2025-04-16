@@ -7,6 +7,12 @@ import platform
 import threading
 from typing import List, Dict
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+from src.towns_profile_manager import TownsProfileManager
+
 message_lock = threading.Lock()
 
 # Define the allowed actions and their possible arguments with default values
@@ -201,3 +207,13 @@ def trim_stacktrace_error(log: str) -> str:
             trimmed_lines.append(line)
 
     return "\n".join(trimmed_lines)
+
+
+# noinspection PyTypeChecker
+def wait_until_element_is_visible(towns_profile: TownsProfileManager, by: By, selector: str, timeout: int = 30):
+    try:
+        return WebDriverWait(towns_profile.driver, timeout).until(EC.visibility_of_element_located((by, selector)))
+    except Exception as e:
+        trimmed_error_log = trim_stacktrace_error(str(e))
+        towns_profile.logger.error(f"Profile_id: {towns_profile.profile_id}. {selector} got error.\n{trimmed_error_log}")
+        raise

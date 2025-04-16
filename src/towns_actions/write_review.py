@@ -2,14 +2,11 @@ import re
 import time
 import random
 from loguru import logger
-
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from src.gpt_helper.openai_helper import fetch_ai_response
 from src.towns_profile_manager import TownsProfileManager
-from src.utils import send_keys, trim_stacktrace_error
+from src.utils import send_keys, trim_stacktrace_error, wait_until_element_is_visible
 
 
 def write_review(towns_profile: TownsProfileManager, town_link: str):
@@ -20,8 +17,11 @@ def write_review(towns_profile: TownsProfileManager, town_link: str):
         towns_profile.driver.get(town_link)
 
         # check if you already a member
-        share_link_element = WebDriverWait(towns_profile.driver, 30).until(EC.visibility_of_element_located(
-            (By.XPATH, "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]")))
+        share_link_element = wait_until_element_is_visible(
+            towns_profile,
+            By.XPATH,
+            "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]"
+        )
         if share_link_element.text != "Share Town Link":
             logger.info(f"Profile_id: {towns_profile.profile_id}. You are not a member of this town. Can NOT perform WRITE_REVIEW action.")
             return False
@@ -35,13 +35,11 @@ def write_review(towns_profile: TownsProfileManager, town_link: str):
             return False
 
         # click write_review button to open box with writing review
-        write_review_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Write a Review')]")))
+        write_review_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Write a Review')]")
         write_review_element.click()
 
         # find an element in the box
-        review_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, ".//textarea[@name='text']")))
+        review_element = wait_until_element_is_visible(towns_profile, By.XPATH, ".//textarea[@name='text']")
 
         # generate and send review
         review_text = generate_review()
@@ -56,13 +54,15 @@ def write_review(towns_profile: TownsProfileManager, town_link: str):
         time.sleep(1)
 
         # click Post_review
-        post_review_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Post Review')]")))
+        post_review_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Post Review')]")
         post_review_element.click()
 
         # click on Pay_with_ETH
-        check_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Pay with ETH')] | //*[contains(text(), 'The review does not show engagement')]")))
+        check_element = wait_until_element_is_visible(
+            towns_profile,
+            By.XPATH,
+            "//*[contains(text(), 'Pay with ETH')] | //*[contains(text(), 'The review does not show engagement')]"
+        )
         if "Pay with ETH" in check_element.text:
             check_element.click()
             time.sleep(2)
@@ -74,8 +74,7 @@ def write_review(towns_profile: TownsProfileManager, town_link: str):
                 return False
         else:
             # find an element in the box
-            review_element = WebDriverWait(towns_profile.driver, 20).until(
-                EC.visibility_of_element_located((By.XPATH, ".//textarea[@name='text']")))
+            review_element = wait_until_element_is_visible(towns_profile, By.XPATH, ".//textarea[@name='text']")
 
             # generate and send additional review
             review_text = generate_review()
@@ -83,13 +82,15 @@ def write_review(towns_profile: TownsProfileManager, town_link: str):
             time.sleep(1)
 
             # Pay with ETH
-            pay_with_eth_element = WebDriverWait(towns_profile.driver, 20).until(
-                EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Pay with ETH')] | //*[contains(text(), 'The review does not show engagement')]")))
+            pay_with_eth_element = wait_until_element_is_visible(
+                towns_profile,
+                By.XPATH,
+                "//*[contains(text(), 'Pay with ETH')] | //*[contains(text(), 'The review does not show engagement')]"
+            )
             pay_with_eth_element.click()
 
         # Wait till review will be submitted
-        WebDriverWait(towns_profile.driver, 40).until(
-            EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Review posted successfully')]")))
+        wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Review posted successfully')]", timeout=60)
         logger.info(f"Profile_id: {towns_profile.profile_id}. Successfully WRITTEN REVIEW!")
 
     except Exception as e:

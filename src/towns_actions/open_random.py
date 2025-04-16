@@ -1,13 +1,10 @@
 import time
 import random
 from loguru import logger
-
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_profile_manager import TownsProfileManager
-from src.utils import get_full_xpath_element, trim_stacktrace_error
+from src.utils import get_full_xpath_element, trim_stacktrace_error, wait_until_element_is_visible
 
 
 def open_random_town(towns_profile: TownsProfileManager):
@@ -18,7 +15,7 @@ def open_random_town(towns_profile: TownsProfileManager):
         towns_profile.driver.get("https://app.towns.com/explore")
 
         # find create_new_town element
-        new_town_element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//a[@href="/t/new"]')))
+        new_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, '//a[@href="/t/new"]')
         new_town_xpath = get_full_xpath_element(towns_profile.driver, new_town_element)
         time.sleep(2)
 
@@ -36,7 +33,7 @@ def open_random_town(towns_profile: TownsProfileManager):
 
             # open random towns
             left_box_elements[town_to_open + 2].click()
-            WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Share Town Link')]")))
+            wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Share Town Link')]")
             logger.info(f"Profile_id: {towns_profile.profile_id}. Successfully OPENED random town!")
             return towns_profile.driver.current_url
         else:

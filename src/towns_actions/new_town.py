@@ -2,14 +2,11 @@ import re
 import time
 import random
 from loguru import logger
-
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from data.lists import *
 from src.towns_profile_manager import TownsProfileManager
-from src.utils import send_keys, save_town_link, trim_stacktrace_error
+from src.utils import send_keys, save_town_link, trim_stacktrace_error, wait_until_element_is_visible
 from src.gpt_helper.openai_helper import generate_town_logo
 
 
@@ -24,65 +21,55 @@ def create_new_town(towns_profile: TownsProfileManager, town_type, cost=0):
         logo_path = generate_town_logo(town_name)
 
         # provide town_logo
-        input_image_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, '//input[@type="file"]')))
+        input_image_element = wait_until_element_is_visible(towns_profile, By.XPATH, '//input[@type="file"]')
         input_image_element.send_keys(logo_path)
         towns_profile.driver.implicitly_wait(0.5)
 
         # provide town_name
-        input_town_name_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//input[@placeholder='Town Name']")))
+        input_town_name_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//input[@placeholder='Town Name']")
         send_keys(input_town_name_element, town_name)
         time.sleep(3)
 
         # click next_button
-        next_button_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//button[@data-testid='next-button']")))
+        next_button_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//button[@data-testid='next-button']")
         next_button_element.click()
         time.sleep(3)
 
         if town_type == "free":
             # click Free button
-            free_town_element = WebDriverWait(towns_profile.driver, 20).until(
-                EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Free')]")))
+            free_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Free')]")
             free_town_element.click()
             time.sleep(1)
 
         elif town_type == "dynamic":
             # click Paid option
-            paid_town_element = WebDriverWait(towns_profile.driver, 20).until(
-                EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Paid')]")))
+            paid_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Paid')]")
             paid_town_element.click()
             time.sleep(1)
 
             # click Dynamic option
-            dynamic_town_element = WebDriverWait(towns_profile.driver, 20).until(
-                EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Dynamic')]")))
+            dynamic_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Dynamic')]")
             dynamic_town_element.click()
             time.sleep(1)
 
         elif town_type == "state":
             # click Paid option
-            paid_town_element = WebDriverWait(towns_profile.driver, 20).until(
-                    EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Paid')]")))
+            paid_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Paid')]")
             paid_town_element.click()
             time.sleep(2)
 
             # click Fixed option
-            fixed_town_element = WebDriverWait(towns_profile.driver, 20).until(
-                    EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Fixed')]")))
+            fixed_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Fixed')]")
             fixed_town_element.click()
             time.sleep(2)
 
             # enter cost amount for the town
-            cost_town_element = WebDriverWait(towns_profile.driver, 20).until(
-                EC.visibility_of_element_located((By.XPATH, "//input[@name='slideMembership.membershipCost']")))
+            cost_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//input[@name='slideMembership.membershipCost']")
             send_keys(cost_town_element, str(cost))
             time.sleep(1)
 
         # click Create button
-        create_town_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//button[@data-testid='create-town-button']")))
+        create_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//button[@data-testid='create-town-button']")
         create_town_element.click()
         time.sleep(4)
 
@@ -94,8 +81,12 @@ def create_new_town(towns_profile: TownsProfileManager, town_type, cost=0):
                 pay_with_ETH_elements[0].click()
 
             # check status
-            element = WebDriverWait(towns_profile.driver, 30).until(
-                EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Give it a moment. Building a town takes a village')] | //*[contains(text(), 'You created')]")))
+            element = wait_until_element_is_visible(
+                towns_profile,
+                By.XPATH,
+                "//*[contains(text(), 'Give it a moment. Building a town takes a village')] | //*[contains(text(), 'You created')]",
+                timeout=40
+            )
             if "Give it a moment. Building a town takes a village" in element.text:
                 pass
             else:
@@ -132,14 +123,17 @@ def join_free_town(towns_profile: TownsProfileManager, town_link):
         towns_profile.driver.get(town_link)
 
         # check if you already a member
-        share_link_element = WebDriverWait(towns_profile.driver, 30).until(EC.visibility_of_element_located(
-            (By.XPATH, "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]")))
+        share_link_element = wait_until_element_is_visible(
+            towns_profile,
+            By.XPATH,
+            "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]"
+        )
         if share_link_element.text == "Share Town Link":
             logger.info(f"Profile_id: {towns_profile.profile_id}. You are a member of this town. Can NOT JOIN TOWN action.")
             return False
 
         # wait till the page is loaded
-        WebDriverWait(towns_profile.driver, 30).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Join for Free')]")))
+        wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Join for Free')]")
 
         # find and click Join button
         button_elements = towns_profile.driver.find_elements(By.XPATH, "//button[@type='button']")
@@ -147,7 +141,7 @@ def join_free_town(towns_profile: TownsProfileManager, town_link):
             if "Join for Free" in button_element.text:
                 button_element.click()
 
-        WebDriverWait(towns_profile.driver, 180).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Share Town Link')]")))
+        wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Share Town Link')]", timeout=180)
         time.sleep(2)
 
         enter_username(towns_profile)
@@ -168,15 +162,18 @@ def join_paid_town(towns_profile: TownsProfileManager, town_link, town_type, upp
         towns_profile.driver.get(town_link)
 
         # check if you already a member
-        share_link_element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located(
-            (By.XPATH, "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]")))
+        share_link_element = wait_until_element_is_visible(
+            towns_profile,
+            By.XPATH,
+            "//*[contains(text(), 'Share Town Link')] | //*[contains(text(), 'Share Link')]"
+        )
         if share_link_element.text == "Share Town Link":
             logger.info(f"Profile_id: {towns_profile.profile_id}. You are a member of this town. Can NOT JOIN TOWN action.")
             change_type_of_town(towns_profile, town_type)
             return False
 
         # find price element
-        element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//span[text()='ETH']")))
+        element = wait_until_element_is_visible(towns_profile, By.XPATH, "//span[text()='ETH']")
         box_price_element = element.find_element(By.XPATH, "..").find_element(By.XPATH, "..").find_element(By.XPATH, "..")
 
         # retrieve the price from element
@@ -188,7 +185,7 @@ def join_paid_town(towns_profile: TownsProfileManager, town_link, town_type, upp
             return False
 
         # wait till the page is loaded
-        WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Join for')]")))
+        wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Join for')]")
 
         # find and click Join button
         button_elements = towns_profile.driver.find_elements(By.XPATH, "//button[@type='button']")
@@ -210,7 +207,12 @@ def join_paid_town(towns_profile: TownsProfileManager, town_link, town_type, upp
             logger.error(f"Profile_id: {towns_profile.profile_id}. Not enough funds to JOIN the town.")
             raise f"Profile_id: {towns_profile.profile_id}. Not enough funds to JOIN the town."
         else:
-            WebDriverWait(towns_profile.driver, 120).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Share Town Link')]")))
+            wait_until_element_is_visible(
+                towns_profile,
+                By.XPATH,
+                "//*[contains(text(), 'Share Town Link')]",
+                timeout=120
+            )
         time.sleep(2)
 
         # enter username if needed

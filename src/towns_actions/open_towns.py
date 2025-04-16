@@ -1,12 +1,9 @@
 import time
 from loguru import logger
-
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from src.towns_profile_manager import TownsProfileManager
-from src.utils import trim_stacktrace_error
+from src.utils import trim_stacktrace_error, wait_until_element_is_visible
 
 
 def open_towns(towns_profile: TownsProfileManager):
@@ -22,7 +19,7 @@ def open_towns(towns_profile: TownsProfileManager):
 
         if "Towns" in towns_profile.driver.title:
             # wait till open
-            element = WebDriverWait(towns_profile.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//a[@href='/t/new'] | //*[contains(text(), 'Log In')]")))
+            element = wait_until_element_is_visible(towns_profile, By.XPATH, "//a[@href='/t/new'] | //*[contains(text(), 'Log In')]")
 
             time.sleep(2)
 

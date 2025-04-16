@@ -1,16 +1,12 @@
 import time
-
 import pyperclip
 from loguru import logger
-
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from src.gpt_helper.openai_helper import generate_username_avatar
 from src.towns_actions.new_town import generate_username, enter_username
 from src.towns_profile_manager import TownsProfileManager
-from src.utils import trim_stacktrace_error, get_full_xpath_element
+from src.utils import trim_stacktrace_error, get_full_xpath_element, wait_until_element_is_visible
 
 
 def get_connected_wallet(towns_profile: TownsProfileManager):
@@ -29,8 +25,7 @@ def get_connected_wallet(towns_profile: TownsProfileManager):
 
     def copy_connected_wallet_in_wallets(towns_profile: TownsProfileManager):
         # find element with Town Wallet <p>
-        towns_wallet_text_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//p[contains(text(), 'Towns Wallet')]")))
+        towns_wallet_text_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//p[contains(text(), 'Towns Wallet')]")
         # find and click on button that copy text
         copy_wallet_element = towns_wallet_text_element.find_element(By.XPATH, "..").find_element(By.XPATH, "span")
         copy_wallet_element.click()
@@ -39,8 +34,11 @@ def get_connected_wallet(towns_profile: TownsProfileManager):
 
     def copy_connected_wallet_in_profile_box(towns_profile: TownsProfileManager):
         # find image_profile_element
-        image_profile_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='upload-image-container']")))
+        image_profile_element = wait_until_element_is_visible(
+            towns_profile,
+            By.XPATH,
+            "//span[@data-testid='upload-image-container']"
+        )
 
         # find profile_box_element
         profile_box_element = image_profile_element.find_element(By.XPATH, "..").find_element(By.XPATH,
@@ -57,8 +55,7 @@ def get_connected_wallet(towns_profile: TownsProfileManager):
         logger.info(f"Profile_id: {towns_profile.profile_id}. GET WALLET action just have started!")
 
         # wait till open the page. find user-profile-button
-        user_profile_button_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='user-profile-button']")))
+        user_profile_button_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//span[@data-testid='user-profile-button']")
 
         # check if profile_box is already opened
         check_elements = towns_profile.driver.find_elements(By.XPATH, "//span[@data-testid='upload-image-container']")
@@ -67,8 +64,7 @@ def get_connected_wallet(towns_profile: TownsProfileManager):
             user_profile_button_element.click()
 
         # find image_profile_element
-        image_profile_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='upload-image-container']")))
+        image_profile_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//span[@data-testid='upload-image-container']")
 
         # find profile_box_element
         profile_box_element = image_profile_element.find_element(By.XPATH, "..").find_element(By.XPATH, "..").find_element(
@@ -80,8 +76,7 @@ def get_connected_wallet(towns_profile: TownsProfileManager):
             towns_profile.wallet = retrieve_wallet_with_validation(towns_profile, copy_connected_wallet_in_profile_box)
         else:
             # find and click Linked Wallets button
-            linked_wallets_element = WebDriverWait(towns_profile.driver, 20).until(
-                EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Linked Wallets')]")))
+            linked_wallets_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Linked Wallets')]")
             linked_wallets_element.click()
 
             towns_profile.wallet = retrieve_wallet_with_validation(towns_profile, copy_connected_wallet_in_wallets)
@@ -97,8 +92,7 @@ def set_profile_avatar(towns_profile: TownsProfileManager):
         logger.info(f"Profile_id: {towns_profile.profile_id}. SET PROFILE AVATAR action just have started!")
 
         # wait till open the page. find user-profile-button
-        user_profile_button_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='user-profile-button']")))
+        user_profile_button_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//span[@data-testid='user-profile-button']")
 
         # check if profile_box is already opened
         check_elements = towns_profile.driver.find_elements(By.XPATH, "//span[@data-testid='upload-image-container']")
@@ -107,8 +101,7 @@ def set_profile_avatar(towns_profile: TownsProfileManager):
             user_profile_button_element.click()
 
         # find image_profile_element
-        new_image_profile_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//input[@data-testid='user-avatar-upload']")))
+        new_image_profile_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//input[@data-testid='user-avatar-upload']")
 
         username = generate_username()
         avatar_path = generate_username_avatar(username)
@@ -118,7 +111,7 @@ def set_profile_avatar(towns_profile: TownsProfileManager):
 
         while True:
             try:
-                WebDriverWait(towns_profile.driver, 2).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Uploading Image')]")))
+                wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Uploading Image')]", timeout=2)
             except:
                 break
 
@@ -138,18 +131,15 @@ def get_existed_towns(towns_profile):
         towns_profile.driver.get("https://app.towns.com/explore")
 
         # wait till open the page.
-        user_profile_button_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='user-profile-button']")))
+        user_profile_button_element = wait_until_element_is_visible(towns_profile, By.XPATH, "//span[@data-testid='user-profile-button']")
         check_elements = towns_profile.driver.find_elements(By.XPATH, "//span[@data-testid='upload-image-container']")
         if not check_elements:
             # click user-profile-button if Profile box is not opened
             user_profile_button_element.click()
-        WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, "//span[@data-testid='upload-image-container']")))
+        wait_until_element_is_visible(towns_profile, By.XPATH, "//span[@data-testid='upload-image-container']")
 
         # find create_new_town element
-        new_town_element = WebDriverWait(towns_profile.driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, '//a[@href="/t/new"]')))
+        new_town_element = wait_until_element_is_visible(towns_profile, By.XPATH, '//a[@href="/t/new"]')
         new_town_xpath = get_full_xpath_element(towns_profile.driver, new_town_element)
         time.sleep(2)
 
@@ -164,8 +154,7 @@ def get_existed_towns(towns_profile):
         if towns_num != len(towns_profile.state_towns) + len(towns_profile.dynamic_towns) + len(towns_profile.free_towns):
             for town_element in left_box_elements[2:]:
                 # wait till load the page
-                WebDriverWait(towns_profile.driver, 20).until(
-                    EC.visibility_of_element_located((By.XPATH, '//a[@href="/t/new"]')))
+                wait_until_element_is_visible(towns_profile, By.XPATH, '//a[@href="/t/new"]')
 
                 # enter username if needed
                 enter_username(towns_profile)
@@ -174,8 +163,7 @@ def get_existed_towns(towns_profile):
                 town_element.click()
 
                 # wait till load the town
-                WebDriverWait(towns_profile.driver, 20).until(
-                    EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Share Town Link')]")))
+                wait_until_element_is_visible(towns_profile, By.XPATH, "//*[contains(text(), 'Share Town Link')]")
 
                 # retrieve town link
                 town_link = towns_profile.driver.current_url
