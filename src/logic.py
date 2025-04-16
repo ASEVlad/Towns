@@ -60,6 +60,8 @@ def execute_initial_actions(towns_profile):
     if open_towns(towns_profile):
         authenticate_user(towns_profile)
 
+    check_reauth(towns_profile)
+
     if not towns_profile.wallet:
         get_connected_wallet(towns_profile)
 
@@ -74,6 +76,7 @@ def authenticate_user(towns_profile):
     elif towns_profile.login_with == "GOOGLE":
         login_google(towns_profile)
 
+def check_reauth(towns_profile):
     if check_reauthentication(towns_profile):
         if reauthenticate(towns_profile):
             logger.info(f"Profile_ID: {towns_profile.profile_id}. Reauthenticate was done successfully.")
