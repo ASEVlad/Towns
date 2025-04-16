@@ -11,8 +11,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from src.towns_profile_manager import TownsProfileManager
-
 message_lock = threading.Lock()
 
 # Define the allowed actions and their possible arguments with default values
@@ -210,7 +208,7 @@ def trim_stacktrace_error(log: str) -> str:
 
 
 # noinspection PyTypeChecker
-def wait_until_element_is_visible(towns_profile: TownsProfileManager, by: By, selector: str, timeout: int = 30):
+def wait_until_element_is_visible(towns_profile, by: By, selector: str, timeout: int = 30):
     try:
         return WebDriverWait(towns_profile.driver, timeout).until(EC.visibility_of_element_located((by, selector)))
     except Exception as e:
