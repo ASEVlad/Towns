@@ -87,7 +87,7 @@ def okx_withdraw(wallet: str, withdraw_range: list, token: str, chain: str, retr
                 print(f'you want to withdraw MAX {amount_to} but have only {round(main_balance, 7)}')
                 amount_to = main_balance
 
-            AMOUNT = round(random.uniform(amount_from, amount_to), 4)
+            AMOUNT = round(random.uniform(amount_from, amount_to), 5)
             break
 
         body = {"ccy":SYMBOL, "amt":AMOUNT, "fee":FEE, "dest":"4", "chain":f"{SYMBOL}-{chain}", "toAddr":wallet}
@@ -134,7 +134,7 @@ def binance_withdraw(wallet: str, withdraw_range: List, token: str = "ETH", netw
             amount=round(ETH_to_send, 6)
         )
 
-        logger.info(f"Binance: {ETH_to_send :.4f} ETH has been sent to wallet")
+        logger.info(f"Binance: {ETH_to_send :.6f} ETH has been sent to wallet")
         return ETH_to_send
     except Exception as e:
         logger.error(f"Binance: {e}")
