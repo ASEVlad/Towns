@@ -5,6 +5,7 @@ import json
 import random
 import platform
 import threading
+from loguru import logger
 from typing import List, Dict
 
 from selenium.webdriver.common.by import By
@@ -213,5 +214,5 @@ def wait_until_element_is_visible(towns_profile, by: By, selector: str, timeout:
         return WebDriverWait(towns_profile.driver, timeout).until(EC.visibility_of_element_located((by, selector)))
     except Exception as e:
         trimmed_error_log = trim_stacktrace_error(str(e))
-        towns_profile.logger.error(f"Profile_id: {towns_profile.profile_id}. {selector} got error.\n{trimmed_error_log}")
+        logger.error(f"Profile_id: {towns_profile.profile_id}. {selector} got error.\n{trimmed_error_log}")
         raise
