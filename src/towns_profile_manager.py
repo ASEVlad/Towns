@@ -74,7 +74,7 @@ class TownsProfileManager:
             self.driver = self.open_ads_power_profile()
         elif self.anty_type == "DOLPHIN":
             self.driver = self.open_dolphin_profile()
-        self.driver.set_page_load_timeout(20)
+        self.driver.set_page_load_timeout(40)
 
         return self.driver
 
